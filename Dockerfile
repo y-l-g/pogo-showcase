@@ -1,4 +1,4 @@
-FROM serversideup/php:8.5.5-frankenphp-trixie-v4.3.5
+FROM serversideup/php:8.5.6-frankenphp-trixie
 
 USER root
 
