@@ -18,6 +18,10 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->encryptCookies();
+        $middleware->preventRequestForgery([
+            'pogo/auth',
+            'pogo/user-auth',
+        ]);
 
         $middleware->web(append: [
             HandleInertiaRequests::class,

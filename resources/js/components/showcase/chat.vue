@@ -64,8 +64,13 @@ if (ch) {
 }
 
 const send = () => {
-    form.submit(message());
-    form.reset();
+    form.type = currentChannel.value;
+    form.submit(message(), {
+        onSuccess: () => {
+            form.reset('content');
+            form.type = currentChannel.value;
+        },
+    });
 };
 </script>
 

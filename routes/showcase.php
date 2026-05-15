@@ -6,7 +6,7 @@ use App\Http\Controllers\Showcase\SendMessageController;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Cache;
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', 'nossr'])->group(function () {
     Route::get('/chat', fn() => Inertia::render('showcase/Chat'))->name('showcase.chat');
     Route::post('/chat/message', SendMessageController::class)->name('showcase.chat.message');
 });

@@ -1,36 +1,57 @@
 import '../css/app.css';
 
 import { createInertiaApp } from '@inertiajs/vue3';
+import { configureEcho } from '@laravel/echo-vue';
 import ui from '@nuxt/ui/vue-plugin';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import Pusher from 'pusher-js';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import PersistentLayout from './layouts/PersistentLayout.vue';
-import { configureEcho } from "@laravel/echo-vue";
-import Pusher from 'pusher-js';
+
+const pogoHost = import.meta.env.VITE_POGO_HOST || window.location.hostname;
+const pogoWsPort = Number(import.meta.env.VITE_POGO_PORT || 80);
+const pogoWssPort = Number(import.meta.env.VITE_POGO_WSS_PORT || 443);
+const pogoForceTls = window.location.protocol === 'https:';
+const pogoTransports = (pogoForceTls ? ['wss'] : ['ws']) as ['wss'] | ['ws'];
+const csrfToken = document
+    .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+    ?.getAttribute('content');
+const pogoAuthHeaders = {
+    'X-Requested-With': 'XMLHttpRequest',
+    ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
+};
+const pogoClient = new Pusher('pogo-key', {
+    cluster: 'mt1',
+    wsHost: pogoHost,
+    wsPort: pogoWsPort,
+    wssPort: pogoWssPort,
+    forceTLS: pogoForceTls,
+    disableStats: true,
+    enabledTransports: pogoTransports,
+    channelAuthorization: {
+        endpoint: '/pogo/auth',
+        transport: 'ajax',
+        headers: pogoAuthHeaders,
+    },
+    userAuthentication: {
+        endpoint: '/pogo/user-auth',
+        transport: 'ajax',
+        headers: pogoAuthHeaders,
+    },
+});
 
 configureEcho({
-    broadcaster: "reverb",
+    broadcaster: 'pusher',
     key: 'pogo-key',
-    wsHost: import.meta.env.VITE_POGO_HOST || window.location.hostname,
-    wsPort: import.meta.env.VITE_POGO_PORT || 80,
-    wssPort: import.meta.env.VITE_POGO_WSS_PORT || 443,
-    forceTLS: false,
-    enabledTransports: ['ws', 'wss'],
+    cluster: 'mt1',
+    wsHost: pogoHost,
+    wsPort: pogoWsPort,
+    wssPort: pogoWssPort,
+    forceTLS: pogoForceTls,
+    enabledTransports: pogoTransports,
     disableStats: true,
-    client: new Pusher('pogo-key', {
-        cluster: 'mt1',
-        wsHost: import.meta.env.VITE_POGO_HOST || window.location.hostname,
-        wsPort: import.meta.env.VITE_POGO_PORT || 80,
-        wssPort: import.meta.env.VITE_POGO_WSS_PORT || 443,
-        forceTLS: false,
-        disableStats: true,
-        enabledTransports: ['ws', 'wss'],
-        channelAuthorization: {
-            endpoint: "/pogo/auth",
-            transport: "ajax",
-        },
-    })
+    client: pogoClient,
 });
 
 createInertiaApp({
