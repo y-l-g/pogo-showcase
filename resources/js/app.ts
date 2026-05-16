@@ -10,6 +10,7 @@ import { createApp, h } from 'vue';
 import PersistentLayout from './layouts/PersistentLayout.vue';
 
 const pogoHost = import.meta.env.VITE_POGO_HOST || window.location.hostname;
+const pogoAppId = import.meta.env.VITE_POGO_APP_ID || 'pogo-app';
 const pogoWsPort = Number(import.meta.env.VITE_POGO_PORT || 80);
 const pogoWssPort = Number(import.meta.env.VITE_POGO_WSS_PORT || 443);
 const pogoForceTls = window.location.protocol === 'https:';
@@ -21,7 +22,7 @@ const pogoAuthHeaders = {
     'X-Requested-With': 'XMLHttpRequest',
     ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
 };
-const pogoClient = new Pusher('pogo-key', {
+const pogoClient = new Pusher(pogoAppId, {
     cluster: 'mt1',
     wsHost: pogoHost,
     wsPort: pogoWsPort,
@@ -43,7 +44,7 @@ const pogoClient = new Pusher('pogo-key', {
 
 configureEcho({
     broadcaster: 'pusher',
-    key: 'pogo-key',
+    key: pogoAppId,
     cluster: 'mt1',
     wsHost: pogoHost,
     wsPort: pogoWsPort,
