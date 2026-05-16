@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import UserMenu from '@/components/layout/UserMenu.vue';
 import { useAuthPage } from '@/composables/useAuthPage';
-import { chat, pogo, scheduler } from '@/routes/showcase';
+import { chat, pogo, queue, scheduler } from '@/routes/showcase';
 import type { BreadcrumbItem, NavigationMenuItem } from '@nuxt/ui';
 import { ref } from 'vue';
 
@@ -27,6 +27,15 @@ const links: NavigationMenuItem[] = [
         icon: 'i-lucide-workflow',
         to: pogo().url,
         active: page.url === pogo().url,
+        onSelect: () => {
+            open.value = false;
+        },
+    },
+    {
+        label: 'Queue',
+        icon: 'i-lucide-list-todo',
+        to: queue().url,
+        active: page.url === queue().url,
         onSelect: () => {
             open.value = false;
         },
