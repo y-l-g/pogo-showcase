@@ -20,7 +20,7 @@ final class ShowPogoController extends Controller
                 'default' => $pogo->poolSize('default'),
                 'external_api' => $pogo->poolSize('external_api'),
             ],
-            'demoResult' => $request->session()->get('pogo_demo_result'),
+            'demoResults' => $request->session()->get('pogo_demo_results', []),
         ]);
     }
 }

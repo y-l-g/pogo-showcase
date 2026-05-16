@@ -7,7 +7,7 @@ import type { BreadcrumbItem } from '@nuxt/ui';
 defineProps<{
     pogoAvailable: boolean;
     poolSizes: Record<string, number>;
-    demoResult?: any;
+    demoResults?: any;
 }>();
 
 const breadcrumbs = [
@@ -24,7 +24,7 @@ const breadcrumbs = [
             <Pogo
                 :pogo-available="pogoAvailable"
                 :pool-sizes="poolSizes"
-                :demo-result="demoResult"
+                :demo-results="demoResults"
             />
         </template>
     </AppLayout>
