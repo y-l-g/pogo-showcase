@@ -7,6 +7,7 @@ import ILucideArrowDownUp from '~icons/lucide/arrow-down-up';
 import ILucideArrowRight from '~icons/lucide/arrow-right';
 import ILucideGithub from '~icons/lucide/github';
 import ILucideListStart from '~icons/lucide/list-start';
+import ILucideWorkflow from '~icons/lucide/workflow';
 
 useSeoMeta({
     title: 'Home',
@@ -25,6 +26,12 @@ const architecturalPillars = [
         description:
             'Built in fast in-memory queue (no persistence) can replace php artisan queue:work or horizon in some cases.',
         icon: ILucideListStart,
+    },
+    {
+        title: 'Pogo Jobs',
+        description:
+            'Dispatch independent request-scoped PHP jobs to dedicated worker pools and await them before responding.',
+        icon: ILucideWorkflow,
     },
     {
         title: 'Scheduler',
@@ -46,6 +53,10 @@ const architecturalPillars = [
             }"
         >
             <UPageHero
+                :ui="{
+                    container:
+                        'mt-[-50px] min-h-screen items-center justify-center ',
+                }"
                 title="Pogo extensions for FrankenPHP"
                 description="Run php artisan octane:frankenphp and enjoy a fast application with built in websocket, queue and scheduler (and more to come)."
             >

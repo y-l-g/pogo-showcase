@@ -1,0 +1,15 @@
+{
+  "name": "pogo/pogo",
+  "description": "Request-scoped parallel PHP jobs for FrankenPHP.",
+  "type": "library",
+  "license": "MIT",
+  "autoload": {
+    "psr-4": {
+      "Pogo\\": "src/"
+    }
+  },
+  "require": {
+    "php": ">=8.4",
+    "ext-json": "*"
+  }
+}
