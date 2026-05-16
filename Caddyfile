@@ -1,85 +1,100 @@
 {
-    {$CADDY_GLOBAL_OPTIONS}
+	skip_install_trust
 
-    admin {$CADDY_SERVER_ADMIN_HOST}:{$CADDY_SERVER_ADMIN_PORT}
+	admin {$CADDY_ADMIN:localhost:2019}
 
-    frankenphp {
-        worker {
-            file "{$APP_PUBLIC_PATH}/frankenphp-worker.php"
-            {$CADDY_SERVER_WORKER_DIRECTIVE}
-            {$CADDY_SERVER_WATCH_DIRECTIVES}
-        }
-    }
-    pogo {
-        pool default {
-            worker "{$APP_PUBLIC_PATH}/pogo-worker.php"
-            num_threads 4
-            max_wait 30s
-        }
+	pogo_showcase_bootstrap
 
-        pool external_api {
-            worker "{$APP_PUBLIC_PATH}/pogo-worker.php"
-            num_threads 8
-            max_wait 10s
-        }
-    }
-    order pogo_websocket before php_server
+	frankenphp {
+		max_requests {$FRANKENPHP_MAX_REQUESTS:1000}
+
+		worker {
+			file public/frankenphp-worker.php
+			num {$HTTP_WORKERS:4}
+			name http
+			env APP_BASE_PATH .
+			env APP_PUBLIC_PATH public
+			env MAX_REQUESTS {$HTTP_MAX_REQUESTS:1000}
+		}
+	}
+
+	pogo {
+		pool default {
+			worker public/pogo-worker.php
+			num_threads {$POGO_DEFAULT_THREADS:4}
+			max_wait 30s
+		}
+
+		pool external_api {
+			worker public/pogo-worker.php
+			num_threads {$POGO_EXTERNAL_API_THREADS:8}
+			max_wait 10s
+		}
+	}
+
+	pogo_queue {
+		worker public/queue-worker.php
+		name showcaseQueue
+		size {$POGO_QUEUE_SIZE:10000}
+		max_message_bytes {$POGO_QUEUE_MAX_MESSAGE_BYTES:1048576}
+		num_threads {$POGO_QUEUE_THREADS:4}
+	}
+
+	pogo_scheduler {
+		command /proc/self/exe php-cli artisan schedule:run
+		dir .
+		timeout {$POGO_SCHEDULER_TIMEOUT:2m}
+		overlap skip
+		shutdown_grace 30s
+	}
+
+	order pogo_websocket before php_server
 }
 
-{$CADDY_EXTRA_CONFIG}
+{$SERVER_NAME:localhost} {
+	log {
+		level {$CADDY_SERVER_LOG_LEVEL:INFO}
+		format filter {
+			wrap console
+			fields {
+				uri query {
+					replace authorization REDACTED
+				}
+			}
+		}
+	}
 
-{$CADDY_SERVER_SERVER_NAME} {
-    log {
-        level {$CADDY_SERVER_LOG_LEVEL}
+	route /app/* {
+		pogo_websocket {
+			app_id pogo-app
+			auth_path /pogo/auth
+			auth_script public/websocket-worker.php
 
-    # Redact the authorization query parameter that can be set by Mercure...
-        format filter {
-            wrap {$CADDY_SERVER_LOGGER}
-            fields {
-                uri query {
-                    replace authorization REDACTED
-                }
-            }
-        }
-    }
+			handshake_rate {$POGO_WS_HANDSHAKE_RATE:100}
+			handshake_burst {$POGO_WS_HANDSHAKE_BURST:50}
+			max_connections {$POGO_WS_MAX_CONNECTIONS:10000}
+			max_auth_body {$POGO_WS_MAX_AUTH_BODY:16384}
+			max_concurrent_auth {$POGO_WS_MAX_CONCURRENT_AUTH:100}
+			broker_queue_size {$POGO_WS_BROKER_QUEUE_SIZE:1024}
+			shard_queue_size {$POGO_WS_SHARD_QUEUE_SIZE:1024}
 
-    route /app/* {
-        pogo_websocket {
-            app_id          pogo-app
-            auth_path       /pogo/auth
-            auth_script     {$APP_PUBLIC_PATH}/websocket-worker.php
-            webhook_secret  super-secret-key
-            
-            handshake_rate  100         # New connection attempts per second (Default: 100)
-            handshake_burst 50          # Burst allowance (Default: 50)
-            max_connections 10000       # Max concurrent clients
-            max_auth_body   16384       # Max PHP Auth response size (bytes)
-            max_concurrent_auth 100     # Max concurrent PHP Auth requests (DoS Protection)
-            
-            num_workers     2           # Number of PHP workers dedicated to Auth
-            num_shards      8           # Internal sharding (Default: 2 * CPU Cores)
-            
-            ping_period     54s         # Server Ping interval
-            pong_wait       60s         # Client Pong timeout
-            write_wait      10s         # Socket write timeout
-            app_secret      super-secret-key
-            
-            # redis_host      localhost:6379
-        }
-    }
+			num_workers {$POGO_WS_AUTH_WORKERS:2}
+			num_shards {$POGO_WS_SHARDS:8}
 
-    route {
-        root * "{$APP_PUBLIC_PATH}"
-        encode zstd br gzip
+			ping_period 54s
+			pong_wait 60s
+			write_wait 10s
+		}
+	}
 
-        # Mercure configuration is injected here...
-        {$CADDY_SERVER_EXTRA_DIRECTIVES}
+	route {
+		root * public
+		encode zstd br gzip
 
-        php_server {
-            index frankenphp-worker.php
-            try_files {path} frankenphp-worker.php
-            # Required for the public/storage/ directory...
-            resolve_root_symlink
-        }
-    }
+		php_server {
+			index frankenphp-worker.php
+			try_files {path} frankenphp-worker.php
+			resolve_root_symlink
+		}
+	}
 }

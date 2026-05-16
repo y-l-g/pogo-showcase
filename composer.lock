@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "253cdbdb6bec79b7a214a836c8108efe",
+    "content-hash": "25bad3c936f1c641f78749d5d7e176fe",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -4012,6 +4012,46 @@
                 "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.2"
             },
             "time": "2026-01-25T14:56:51+00:00"
+        },
+        {
+            "name": "pogo/laravel-queue",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "../queue/packages/laravel",
+                "reference": "e2f1d58cb3cd20f17d64a8de3f3842e39f2739dc"
+            },
+            "require": {
+                "laravel/framework": "^13.0",
+                "laravel/octane": "^2.0",
+                "php": "^8.5"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Pogo\\Queue\\Laravel\\PogoQueueServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pogo\\Queue\\Laravel\\": "src/"
+                }
+            },
+            "autoload-dev": {
+                "psr-4": {
+                    "Pogo\\Queue\\Laravel\\Tests\\": "tests/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Pogo Queue Driver for Laravel",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
         },
         {
             "name": "pogo/pogo",
@@ -12815,6 +12855,7 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "pogo/laravel-queue": 20,
         "pogo/pogo": 20
     },
     "prefer-stable": true,

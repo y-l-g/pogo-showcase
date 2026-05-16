@@ -9,7 +9,7 @@ use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets;
 use Symfony\Component\HttpFoundation\Request;
 
-return Application::configure(basePath: dirname(__DIR__))
+$app = Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         channels: __DIR__.'/../routes/channels.php',
         web: __DIR__ . '/../routes/web.php',
@@ -45,3 +45,14 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })->create();
+
+$storagePath = $_SERVER['LARAVEL_STORAGE_PATH']
+    ?? $_ENV['LARAVEL_STORAGE_PATH']
+    ?? getenv('LARAVEL_STORAGE_PATH')
+    ?: null;
+
+if (is_string($storagePath) && $storagePath !== '') {
+    $app->useStoragePath($storagePath);
+}
+
+return $app;
