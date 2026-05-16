@@ -1,5 +1,41 @@
 # syntax=docker/dockerfile:1
 
+FROM serversideup/php:8.5.6-frankenphp-trixie AS app-builder
+
+USER root
+
+WORKDIR /workspace/app
+COPY pogoShowcase/ ./
+COPY queue/packages/laravel/ /workspace/queue/packages/laravel/
+
+RUN rm -rf \
+		node_modules \
+		vendor \
+		.git \
+		.agents \
+		.codex \
+		.dev \
+		tests \
+		storage/logs/* \
+		storage/framework/cache/data/* \
+		storage/framework/sessions/* \
+		storage/framework/views/* \
+		bootstrap/cache/*.php \
+		.env \
+		public/storage \
+	&& cp .env.example .env \
+	&& export APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= WS_APP_SECRET=static-build-secret POGO_WEBHOOK_SECRET=static-build-webhook-secret \
+	&& composer install \
+		--ignore-platform-reqs \
+		--no-dev \
+		--classmap-authoritative \
+		--optimize-autoloader \
+		--prefer-dist \
+		--no-interaction \
+	&& php artisan package:discover --ansi \
+	&& php artisan wayfinder:generate --with-form --ansi \
+	&& php artisan optimize:clear --ansi
+
 FROM --platform=linux/amd64 dunglas/frankenphp:static-builder-gnu
 
 ARG PHP_VERSION=8.5.6
@@ -22,35 +58,7 @@ COPY websocket/ /src/websocket/
 COPY pogoShowcase/runtime/ /src/pogo-showcase/runtime/
 
 WORKDIR /go/src/app/dist/app
-COPY pogoShowcase/ ./
-COPY queue/packages/laravel/ ../queue/packages/laravel/
-
-RUN rm -rf \
-		node_modules \
-		vendor \
-		.git \
-		.agents \
-		.codex \
-		.dev \
-		tests \
-		storage/logs/* \
-		storage/framework/cache/data/* \
-		storage/framework/sessions/* \
-		storage/framework/views/* \
-		bootstrap/cache/*.php \
-		.env \
-		public/storage \
-	&& cp .env.example .env \
-	&& composer install \
-		--ignore-platform-reqs \
-		--no-dev \
-		--classmap-authoritative \
-		--optimize-autoloader \
-		--prefer-dist \
-		--no-interaction \
-	&& php artisan package:discover --ansi \
-	&& php artisan wayfinder:generate --with-form --ansi \
-	&& php artisan optimize:clear --ansi
+COPY --from=app-builder /workspace/app/ ./
 
 WORKDIR /go/src/app
 RUN EMBED=dist/app/ ./build-static.sh \
