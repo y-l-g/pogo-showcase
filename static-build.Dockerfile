@@ -56,7 +56,7 @@ ARG PHP_VERSION=8.5.6
 ARG COMPRESS=""
 ARG PHP_EXTENSIONS="bcmath,ctype,curl,dom,fileinfo,filter,iconv,intl,mbstring,opcache,openssl,pcntl,pdo,pdo_sqlite,phar,posix,session,simplexml,sodium,sqlite3,tokenizer,xml,xmlreader,xmlwriter,zip,zlib"
 ARG PHP_EXTENSION_LIBS="libavif,nghttp2,nghttp3,ngtcp2,watcher,bzip2,xz,zstd,libssh2,ldap"
-ARG XCADDY_ARGS="--with github.com/dunglas/caddy-cbrotli --with github.com/dunglas/mercure/caddy --with github.com/dunglas/vulcain/caddy --with github.com/y-l-g/pogo/module@main --with github.com/y-l-g/queue/module@main --with github.com/y-l-g/scheduler/module@main --with github.com/y-l-g/websocket/module@main --with github.com/y-l-g/pogo-showcase/runtime/module=./dist/app/runtime/module"
+ARG XCADDY_ARGS="--with github.com/dunglas/caddy-cbrotli --with github.com/dunglas/mercure/caddy --with github.com/dunglas/vulcain/caddy --with github.com/y-l-g/pogo/module@main --with github.com/y-l-g/queue/module@main --with github.com/y-l-g/scheduler/module@main --with github.com/y-l-g/websocket/module@main --with github.com/y-l-g/pogo-showcase/runtime/module=/go/src/app/dist/app/runtime/module"
 
 ENV CI=${CI} \
 	FRANKENPHP_VERSION=${FRANKENPHP_VERSION} \
@@ -70,12 +70,5 @@ WORKDIR /go/src/app/dist/app
 COPY --from=asset-builder /workspace/app/ ./
 
 WORKDIR /go/src/app
-RUN --mount=type=secret,id=github-token,required=false \
-	if [ -s /run/secrets/github-token ]; then \
-		export GITHUB_TOKEN="$(cat /run/secrets/github-token)"; \
-		export GOPRIVATE=github.com/y-l-g/*; \
-		git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
-	fi \
-	&& EMBED=dist/app/ ./build-static.sh \
-	&& if [ -n "${GITHUB_TOKEN:-}" ]; then git config --global --unset-all url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf; fi \
+RUN EMBED=dist/app/ ./build-static.sh \
 	&& cp dist/frankenphp-linux-x86_64 dist/pogo-showcase-linux-x86_64

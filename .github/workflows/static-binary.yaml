@@ -10,7 +10,6 @@ env:
     BINARY_NAME: pogo-showcase-linux-x86_64
     IMAGE_NAME: pogo-showcase-static:ci
     FRANKENPHP_VERSION: 1.12.3
-    STATIC_BUILD_GITHUB_TOKEN: ${{ secrets.STATIC_BUILD_GITHUB_TOKEN }}
 
 jobs:
     build:
@@ -35,8 +34,6 @@ jobs:
                   tags: ${{ env.IMAGE_NAME }}
                   build-args: |
                       FRANKENPHP_VERSION=${{ env.FRANKENPHP_VERSION }}
-                  secrets: |
-                      github-token=${{ env.STATIC_BUILD_GITHUB_TOKEN }}
 
             - name: Extract binary
               run: |
