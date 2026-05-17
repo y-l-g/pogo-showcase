@@ -3,7 +3,25 @@
 Build from the repository root:
 
 ```bash
-docker build -t pogo-showcase-static -f pogoShowcase/static-build.Dockerfile .
+GITHUB_TOKEN="$(gh auth token)" docker buildx build --load \
+ --network=host \
+ --progress=plain \
+ --secret id=github-token,env=GITHUB_TOKEN \
+ -t pogo-showcase-static \
+ -f static-build.Dockerfile \
+ ..
+
+or without compression
+
+GITHUB_TOKEN="$(gh auth token)" docker buildx build --load \
+ --network=host \
+ --progress=plain \
+ --secret id=github-token,env=GITHUB_TOKEN \
+ --build-arg COMPRESS= \
+ -t pogo-showcase-static \
+ -f static-build.Dockerfile \
+ ..
+
 docker cp "$(docker create --name pogo-showcase-static-tmp pogo-showcase-static):/go/src/app/dist/pogo-showcase-linux-x86_64" ./pogo-showcase
 docker rm pogo-showcase-static-tmp
 chmod +x ./pogo-showcase

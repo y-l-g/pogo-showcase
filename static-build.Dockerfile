@@ -1,5 +1,7 @@
 # syntax=docker/dockerfile:1
 
+ARG STATIC_BUILDER_PLATFORM=linux/amd64
+
 FROM serversideup/php:8.5.6-frankenphp-trixie AS app-builder
 
 USER root
@@ -36,7 +38,7 @@ RUN rm -rf \
 	&& php artisan wayfinder:generate --with-form --ansi \
 	&& php artisan optimize:clear --ansi
 
-FROM --platform=linux/amd64 dunglas/frankenphp:static-builder-gnu
+FROM --platform=${STATIC_BUILDER_PLATFORM} dunglas/frankenphp:static-builder-gnu
 
 ARG PHP_VERSION=8.5.6
 ARG COMPRESS=0
@@ -64,5 +66,7 @@ WORKDIR /go/src/app/dist/app
 COPY --from=app-builder /workspace/app/ ./
 
 WORKDIR /go/src/app
-RUN EMBED=dist/app/ ./build-static.sh \
+RUN --mount=type=secret,id=github-token,required=false \
+	if [ -f /run/secrets/github-token ]; then export GITHUB_TOKEN="$(cat /run/secrets/github-token)"; fi \
+	&& EMBED=dist/app/ ./build-static.sh \
 	&& cp dist/frankenphp-linux-x86_64 dist/pogo-showcase-linux-x86_64
