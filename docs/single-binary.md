@@ -1,5 +1,22 @@
 # Pogo Showcase Single Binary
 
+## GitHub Actions build
+
+The `Build static binary` workflow builds the same Linux x86_64 binary in
+GitHub Actions.
+
+- Run it manually from the Actions tab to download the binary as a workflow
+  artifact.
+- Push a `v*` tag, for example `v0.1.0`, to publish the binary and checksum as
+  GitHub Release assets.
+
+If any of the `y-l-g/*` repositories used by the build are private, configure a
+`STATIC_BUILD_GITHUB_TOKEN` repository secret with read access to those
+repositories. The workflow passes that token to BuildKit as a secret so it is not
+baked into the image layers.
+
+## Local build
+
 Build from `pogoShowcase`:
 
 ```bash

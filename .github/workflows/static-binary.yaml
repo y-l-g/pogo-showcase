@@ -1,0 +1,93 @@
+name: Build static binary
+
+on:
+    workflow_dispatch:
+    push:
+        tags:
+            - 'v*'
+
+env:
+    BINARY_NAME: pogo-showcase-linux-x86_64
+    IMAGE_NAME: pogo-showcase-static:ci
+    STATIC_BUILD_GITHUB_TOKEN: ${{ secrets.STATIC_BUILD_GITHUB_TOKEN }}
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Checkout Pogo Showcase
+              uses: actions/checkout@v6
+              with:
+                  path: build-context/pogoShowcase
+
+            - name: Checkout FrankenPHP
+              uses: actions/checkout@v6
+              with:
+                  repository: php/frankenphp
+                  path: build-context/frankenphp-main
+
+            - name: Checkout Queue
+              uses: actions/checkout@v6
+              with:
+                  repository: y-l-g/queue
+                  token: ${{ secrets.STATIC_BUILD_GITHUB_TOKEN || github.token }}
+                  path: build-context/queue
+
+            - name: Set up Docker Buildx
+              uses: docker/setup-buildx-action@v3
+
+            - name: Build image with embedded app
+              if: env.STATIC_BUILD_GITHUB_TOKEN == ''
+              uses: docker/build-push-action@v7
+              with:
+                  context: build-context
+                  file: build-context/pogoShowcase/static-build.Dockerfile
+                  load: true
+                  tags: ${{ env.IMAGE_NAME }}
+
+            - name: Build image with embedded app and private token
+              if: env.STATIC_BUILD_GITHUB_TOKEN != ''
+              uses: docker/build-push-action@v7
+              with:
+                  context: build-context
+                  file: build-context/pogoShowcase/static-build.Dockerfile
+                  load: true
+                  tags: ${{ env.IMAGE_NAME }}
+                  secrets: |
+                      github-token=${{ env.STATIC_BUILD_GITHUB_TOKEN }}
+
+            - name: Extract binary
+              run: |
+                  mkdir -p dist
+                  container="$(docker create "${IMAGE_NAME}")"
+                  trap 'docker rm -f "${container}" >/dev/null' EXIT
+                  docker cp "${container}:/go/src/app/dist/${BINARY_NAME}" "dist/${BINARY_NAME}"
+                  chmod +x "dist/${BINARY_NAME}"
+
+            - name: Verify binary
+              run: |
+                  file "dist/${BINARY_NAME}"
+                  "dist/${BINARY_NAME}" version
+                  sha256sum "dist/${BINARY_NAME}" > "dist/${BINARY_NAME}.sha256"
+
+            - name: Upload workflow artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ env.BINARY_NAME }}
+                  path: |
+                      dist/${{ env.BINARY_NAME }}
+                      dist/${{ env.BINARY_NAME }}.sha256
+                  compression-level: 0
+                  retention-days: 30
+                  if-no-files-found: error
+
+            - name: Upload release assets
+              if: startsWith(github.ref, 'refs/tags/v')
+              uses: softprops/action-gh-release@v2
+              with:
+                  files: |
+                      dist/${{ env.BINARY_NAME }}
+                      dist/${{ env.BINARY_NAME }}.sha256

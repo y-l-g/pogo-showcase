@@ -48,7 +48,6 @@ jobs:
               run: npm run format:check
 
             - name: Tests
-              env:
               run: ./vendor/bin/pest --configuration=phpunit.coverage.xml --coverage
 
             - name: Larastan
