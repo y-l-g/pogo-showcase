@@ -23,6 +23,10 @@ import (
 const appName = "aaa_pogo_showcase_bootstrap"
 
 func init() {
+	if frankenphp.EmbeddedAppPath != "" {
+		_ = os.Setenv("POGO_SHOWCASE_APP_PATH", frankenphp.EmbeddedAppPath)
+	}
+
 	caddy.RegisterModule(Bootstrap{})
 	httpcaddyfile.RegisterGlobalOption("pogo_showcase_bootstrap", parseGlobalOption)
 }
@@ -75,10 +79,6 @@ func (b *Bootstrap) prepareEnvironment() (string, error) {
 	}
 
 	if err := mkdirs(dataDir); err != nil {
-		return "", err
-	}
-
-	if err := chdirEmbeddedApp(); err != nil {
 		return "", err
 	}
 
@@ -148,19 +148,6 @@ func (b *Bootstrap) prepareEnvironment() (string, error) {
 	return dataDir, nil
 }
 
-func chdirEmbeddedApp() error {
-	if frankenphp.EmbeddedAppPath == "" {
-		return nil
-	}
-	if err := os.Setenv("POGO_SHOWCASE_APP_PATH", frankenphp.EmbeddedAppPath); err != nil {
-		return fmt.Errorf("set POGO_SHOWCASE_APP_PATH: %w", err)
-	}
-	if err := os.Chdir(frankenphp.EmbeddedAppPath); err != nil {
-		return fmt.Errorf("change directory to embedded app: %w", err)
-	}
-	return nil
-}
-
 func (b *Bootstrap) migrate(dataDir string) error {
 	lockPath := filepath.Join(dataDir, "bootstrap.lock")
 	lockFile, err := os.OpenFile(lockPath, os.O_CREATE|os.O_RDWR, 0o600)
@@ -183,7 +170,7 @@ func (b *Bootstrap) migrate(dataDir string) error {
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	cmd.Env = os.Environ()
-	cmd.Dir = "."
+	cmd.Dir = appPath()
 
 	start := time.Now()
 	if b.logger != nil {
@@ -197,6 +184,16 @@ func (b *Bootstrap) migrate(dataDir string) error {
 	}
 
 	return nil
+}
+
+func appPath() string {
+	if frankenphp.EmbeddedAppPath != "" {
+		return frankenphp.EmbeddedAppPath
+	}
+	if value := os.Getenv("POGO_SHOWCASE_APP_PATH"); value != "" {
+		return value
+	}
+	return "."
 }
 
 func (b *Bootstrap) resolveDataDir() (string, error) {

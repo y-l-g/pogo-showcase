@@ -51,6 +51,56 @@ jobs:
                   "dist/${BINARY_NAME}" version
                   sha256sum "dist/${BINARY_NAME}" > "dist/${BINARY_NAME}.sha256"
 
+            - name: Smoke test binary from empty directory
+              run: |
+                  workdir="$(mktemp -d)"
+                  data_dir="$(mktemp -d)"
+                  log_file="${RUNNER_TEMP}/pogo-showcase-smoke.log"
+
+                  (
+                      cd "${workdir}"
+                      SERVER_NAME=:8080 \
+                      POGO_SHOWCASE_DATA="${data_dir}" \
+                      "${GITHUB_WORKSPACE}/dist/${BINARY_NAME}" php-server
+                  ) >"${log_file}" 2>&1 &
+                  pid="$!"
+
+                  cleanup() {
+                      if kill -0 "${pid}" >/dev/null 2>&1; then
+                          kill "${pid}" >/dev/null 2>&1 || true
+                          wait "${pid}" || true
+                      fi
+                  }
+                  trap cleanup EXIT
+
+                  for attempt in $(seq 1 60); do
+                      if ! kill -0 "${pid}" >/dev/null 2>&1; then
+                          echo "Binary exited before becoming healthy"
+                          cat "${log_file}"
+                          exit 1
+                      fi
+
+                      if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
+                          break
+                      fi
+
+                      if [ "${attempt}" -eq 60 ]; then
+                          echo "Binary did not become healthy"
+                          cat "${log_file}"
+                          exit 1
+                      fi
+
+                      sleep 1
+                  done
+
+                  if grep -E "worker file not found|Undefined constant|No such file or directory" "${log_file}"; then
+                      echo "Smoke test found startup errors"
+                      cat "${log_file}"
+                      exit 1
+                  fi
+
+                  echo "Smoke test passed"
+
             - name: Upload workflow artifact
               uses: actions/upload-artifact@v4
               with:

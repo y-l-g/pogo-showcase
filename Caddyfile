@@ -9,7 +9,7 @@
 		max_requests {$FRANKENPHP_MAX_REQUESTS:1000}
 
 		worker {
-			file public/frankenphp-worker.php
+			file {$POGO_SHOWCASE_APP_PATH:.}/public/frankenphp-worker.php
 			num {$HTTP_WORKERS:4}
 			name http
 			env MAX_REQUESTS {$HTTP_MAX_REQUESTS:1000}
@@ -18,20 +18,20 @@
 
 	pogo {
 		pool default {
-			worker public/pogo-worker.php
+			worker {$POGO_SHOWCASE_APP_PATH:.}/public/pogo-worker.php
 			num_threads {$POGO_DEFAULT_THREADS:4}
 			max_wait 30s
 		}
 
 		pool external_api {
-			worker public/pogo-worker.php
+			worker {$POGO_SHOWCASE_APP_PATH:.}/public/pogo-worker.php
 			num_threads {$POGO_EXTERNAL_API_THREADS:8}
 			max_wait 10s
 		}
 	}
 
 	pogo_queue {
-		worker public/queue-worker.php
+		worker {$POGO_SHOWCASE_APP_PATH:.}/public/queue-worker.php
 		name showcaseQueue
 		size {$POGO_QUEUE_SIZE:10000}
 		max_message_bytes {$POGO_QUEUE_MAX_MESSAGE_BYTES:1048576}
@@ -40,7 +40,7 @@
 
 	pogo_scheduler {
 		command /proc/self/exe php-cli artisan schedule:run
-		dir .
+		dir {$POGO_SHOWCASE_APP_PATH:.}
 		timeout {$POGO_SCHEDULER_TIMEOUT:2m}
 		overlap allow
 		shutdown_grace 30s
@@ -66,7 +66,7 @@
 		pogo_websocket {
 			app_id pogo-app
 			auth_path /pogo/auth
-			auth_script public/websocket-worker.php
+			auth_script {$POGO_SHOWCASE_APP_PATH:.}/public/websocket-worker.php
 
 			handshake_rate {$POGO_WS_HANDSHAKE_RATE:100}
 			handshake_burst {$POGO_WS_HANDSHAKE_BURST:50}
@@ -86,7 +86,7 @@
 	}
 
 	route {
-		root * public
+		root * {$POGO_SHOWCASE_APP_PATH:.}/public
 		encode zstd br gzip
 
 		php_server {
