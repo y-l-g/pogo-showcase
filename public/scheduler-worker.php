@@ -1,8 +1,6 @@
 <?php
 
 use Illuminate\Contracts\Console\Kernel;
-use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Request;
 use Laravel\Octane\FrankenPhp\FrankenPhpClient;
 
 if (! defined('STDERR')) {
@@ -18,18 +16,18 @@ ini_set('display_errors', '0');
 ini_set('log_errors', '1');
 ini_set('error_log', 'php://stderr');
 
-if ((! (Request::server('FRANKENPHP_WORKER') ?? false)) || ! function_exists('frankenphp_handle_request')) {
+if ((! ($_SERVER['FRANKENPHP_WORKER'] ?? false)) || ! function_exists('frankenphp_handle_request')) {
     exit(1);
 }
 
 ignore_user_abort(true);
 
-$basePath = Request::server('APP_BASE_PATH') ?? Env::get('APP_BASE_PATH', dirname(__DIR__));
+$basePath = $_SERVER['APP_BASE_PATH'] ?? $_ENV['APP_BASE_PATH'] ?? getenv('APP_BASE_PATH') ?: dirname(__DIR__);
 require_once $basePath.'/vendor/autoload.php';
 
 $frankenPhpClient = new FrankenPhpClient;
 $requestCount = 0;
-$maxRequests = Env::get('MAX_REQUESTS', Request::server('MAX_REQUESTS') ?? 60);
+$maxRequests = $_ENV['MAX_REQUESTS'] ?? $_SERVER['MAX_REQUESTS'] ?? getenv('MAX_REQUESTS') ?: 60;
 
 $handleRequest = static function ($payload = null) use ($basePath): void {
     $_SERVER['argv'] = ['artisan', 'schedule:run'];

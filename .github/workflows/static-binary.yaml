@@ -76,12 +76,22 @@ jobs:
                   }
                   trap cleanup EXIT
 
+                  fail_on_log_errors() {
+                      if grep -E "Fatal error|Class (&quot;|\")Illuminate|worker script has failed|worker file not found|Undefined constant|No such file or directory" "${log_file}"; then
+                          echo "Smoke test found startup errors"
+                          cat "${log_file}"
+                          exit 1
+                      fi
+                  }
+
                   for attempt in $(seq 1 60); do
                       if ! kill -0 "${pid}" >/dev/null 2>&1; then
                           echo "Binary exited before becoming healthy"
                           cat "${log_file}"
                           exit 1
                       fi
+
+                      fail_on_log_errors
 
                       if curl -fsS http://127.0.0.1:8080/ >/dev/null; then
                           break
@@ -96,11 +106,7 @@ jobs:
                       sleep 1
                   done
 
-                  if grep -E "worker file not found|Undefined constant|No such file or directory" "${log_file}"; then
-                      echo "Smoke test found startup errors"
-                      cat "${log_file}"
-                      exit 1
-                  fi
+                  fail_on_log_errors
 
                   echo "Smoke test passed"
 

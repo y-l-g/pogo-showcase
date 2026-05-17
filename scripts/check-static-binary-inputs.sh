@@ -12,6 +12,7 @@ required_files=(
     public/frankenphp-worker.php
     public/pogo-worker.php
     public/queue-worker.php
+    public/scheduler-worker.php
     public/websocket-worker.php
 )
 
@@ -38,6 +39,11 @@ done
 
 if rg -n '(^|[[:space:]])(file|worker|auth_script)[[:space:]]+public/|root[[:space:]]+\*[[:space:]]+public($|[[:space:]])|dir[[:space:]]+\.$' Caddyfile >&2; then
     printf 'Caddyfile contains cwd-sensitive static binary paths. Use {$POGO_SHOWCASE_APP_PATH:.}/... instead.\n' >&2
+    failed=1
+fi
+
+if rg -n 'Env::get|Request::server' public/*worker.php >&2; then
+    printf 'Worker scripts must not call Laravel Env/Request before autoload. Use $_SERVER/$_ENV/getenv instead.\n' >&2
     failed=1
 fi
 

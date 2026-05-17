@@ -2,16 +2,14 @@
 
 declare(strict_types=1);
 
-use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Request;
 use Pogo\JobInterface;
 
-if ((! (Request::server('FRANKENPHP_WORKER') ?? false)) || ! function_exists('frankenphp_handle_request')) {
+if ((! ($_SERVER['FRANKENPHP_WORKER'] ?? false)) || ! function_exists('frankenphp_handle_request')) {
     echo 'FrankenPHP must be in worker mode to use this script.';
     exit(1);
 }
 
-$basePath = Request::server('APP_BASE_PATH') ?? Env::get('APP_BASE_PATH', dirname(__DIR__));
+$basePath = $_SERVER['APP_BASE_PATH'] ?? $_ENV['APP_BASE_PATH'] ?? getenv('APP_BASE_PATH') ?: dirname(__DIR__);
 
 require_once $basePath.'/vendor/autoload.php';
 

@@ -25,7 +25,8 @@ php artisan test
 
 The preflight verifies that release-critical embedded app files are present,
 tracked by Git, and not ignored. It also catches Caddyfile paths that would
-depend on the process working directory instead of the embedded app path.
+depend on the process working directory instead of the embedded app path, and
+worker scripts that call Laravel helpers before Composer autoload is available.
 
 ## Local build
 

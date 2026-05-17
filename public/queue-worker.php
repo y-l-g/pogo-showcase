@@ -1,21 +1,19 @@
 <?php
 
 use Illuminate\Queue\WorkerOptions;
-use Illuminate\Support\Env;
-use Illuminate\Support\Facades\Request;
 use Laravel\Octane\ApplicationFactory;
 use Laravel\Octane\FrankenPhp\FrankenPhpClient;
 use Laravel\Octane\Worker;
 use Pogo\Queue\Laravel\PogoJob;
 
-if ((! (Request::server('FRANKENPHP_WORKER') ?? false)) || ! function_exists('frankenphp_handle_request')) {
+if ((! ($_SERVER['FRANKENPHP_WORKER'] ?? false)) || ! function_exists('frankenphp_handle_request')) {
     echo 'FrankenPHP must be in worker mode to use this script.';
     exit(1);
 }
 
 ignore_user_abort(true);
 
-$basePath = Request::server('APP_BASE_PATH') ?? Env::get('APP_BASE_PATH', dirname(__DIR__));
+$basePath = $_SERVER['APP_BASE_PATH'] ?? $_ENV['APP_BASE_PATH'] ?? getenv('APP_BASE_PATH') ?: dirname(__DIR__);
 
 if (! file_exists($basePath.'/bootstrap/app.php')) {
     error_log("Application path not found at: $basePath");
@@ -32,11 +30,11 @@ $worker = tap(new Worker(
 ))->boot();
 
 $requestCount = 0;
-$maxRequests = Env::get('MAX_REQUESTS', Request::server('MAX_REQUESTS') ?? 1000);
+$maxRequests = $_ENV['MAX_REQUESTS'] ?? $_SERVER['MAX_REQUESTS'] ?? getenv('MAX_REQUESTS') ?: 1000;
 
 // Allow configuration via environment variables
-$queueConnection = Env::get('POGO_CONNECTION', 'pogo');
-$queueName = Env::get('POGO_QUEUE', 'default');
+$queueConnection = $_ENV['POGO_CONNECTION'] ?? $_SERVER['POGO_CONNECTION'] ?? getenv('POGO_CONNECTION') ?: 'pogo';
+$queueName = $_ENV['POGO_QUEUE'] ?? $_SERVER['POGO_QUEUE'] ?? getenv('POGO_QUEUE') ?: 'default';
 
 $queueOptions = new WorkerOptions;
 
