@@ -36,6 +36,7 @@ components.d.ts
 **/caddy
 frankenphp
 frankenphp-worker.php
+!public/frankenphp-worker.php
 
 data
 pogo-showcase

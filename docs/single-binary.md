@@ -13,6 +13,20 @@ GitHub Actions.
 The external Caddy modules are resolved through the normal Go module flow during
 the Docker build.
 
+## Fast preflight
+
+Before pushing a tag or running the full static build, run:
+
+```bash
+bash scripts/check-static-binary-inputs.sh
+php -l config/database.php
+php artisan test
+```
+
+The preflight verifies that release-critical embedded app files are present,
+tracked by Git, and not ignored. It also catches Caddyfile paths that would
+depend on the process working directory instead of the embedded app path.
+
 ## Local build
 
 Build from `pogoShowcase`:
