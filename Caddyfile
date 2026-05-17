@@ -42,7 +42,7 @@
 		command /proc/self/exe php-cli artisan schedule:run
 		dir .
 		timeout {$POGO_SCHEDULER_TIMEOUT:2m}
-		overlap skip
+		overlap allow
 		shutdown_grace 30s
 	}
 

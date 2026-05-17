@@ -52,7 +52,7 @@ RUN npm ci --legacy-peer-deps \
 FROM --platform=${STATIC_BUILDER_PLATFORM} dunglas/frankenphp:static-builder-gnu
 
 ARG PHP_VERSION=8.5.6
-ARG COMPRESS=0
+ARG COMPRESS=""
 ARG PHP_EXTENSIONS="bcmath,ctype,curl,dom,fileinfo,filter,iconv,intl,mbstring,opcache,openssl,pcntl,pdo,pdo_sqlite,phar,posix,session,simplexml,sodium,sqlite3,tokenizer,xml,xmlreader,xmlwriter,zip,zlib"
 ARG PHP_EXTENSION_LIBS="libavif,nghttp2,nghttp3,ngtcp2,watcher,bzip2,xz,zstd,libssh2,ldap"
 ARG XCADDY_ARGS="--with github.com/dunglas/caddy-cbrotli --with github.com/dunglas/mercure/caddy --with github.com/dunglas/vulcain/caddy --with github.com/y-l-g/pogo/module=/src/pogo/module --with github.com/y-l-g/queue/module=/src/queue/module --with github.com/y-l-g/scheduler/module=/src/scheduler/module --with github.com/y-l-g/websocket/module=/src/websocket/module --with github.com/y-l-g/pogo-showcase/runtime/module=/src/pogo-showcase/runtime/module"

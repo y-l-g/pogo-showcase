@@ -1,6 +1,6 @@
 # Pogo Showcase Single Binary
 
-Build from the repository root:
+Build from `pogoShowcase`:
 
 ```bash
 GITHUB_TOKEN="$(gh auth token)" docker buildx build --load \
@@ -10,20 +10,27 @@ GITHUB_TOKEN="$(gh auth token)" docker buildx build --load \
  -t pogo-showcase-static \
  -f static-build.Dockerfile \
  ..
+```
 
-or without compression
+Compression with UPX is disabled by default. To explicitly try UPX compression:
 
+```bash
 GITHUB_TOKEN="$(gh auth token)" docker buildx build --load \
  --network=host \
  --progress=plain \
  --secret id=github-token,env=GITHUB_TOKEN \
- --build-arg COMPRESS= \
+ --build-arg COMPRESS=1 \
  -t pogo-showcase-static \
  -f static-build.Dockerfile \
  ..
+```
 
-docker cp "$(docker create --name pogo-showcase-static-tmp pogo-showcase-static):/go/src/app/dist/pogo-showcase-linux-x86_64" ./pogo-showcase
-docker rm pogo-showcase-static-tmp
+Copy the binary:
+
+```bash
+tmp="$(docker create pogo-showcase-static)"
+docker cp "$tmp:/go/src/app/dist/pogo-showcase-linux-x86_64" ./pogo-showcase
+docker rm "$tmp"
 chmod +x ./pogo-showcase
 ```
 
