@@ -18,10 +18,11 @@ the Docker build.
 Build from `pogoShowcase`:
 
 ```bash
+GITHUB_TOKEN="$(gh auth token)" \
 docker buildx build --load \
   --network=host \
   --progress=plain \
-  --build-arg COMPRESS=1 \
+  --secret id=github-token,env=GITHUB_TOKEN \
   -t pogo-showcase-static \
   -f static-build.Dockerfile \
   .
@@ -32,8 +33,13 @@ Go/Caddy modules are resolved from GitHub `main` during the static build:
 `pogo`, `queue`, `scheduler`, `websocket`, and `pogo-showcase/runtime`. Push
 changes to those repositories before building if the binary must include them.
 
-Compression with UPX is disabled by default. Remove `--build-arg COMPRESS=1` to
-build without UPX compression.
+The `github-token` build secret is used only by `static-php-cli` downloads to
+avoid unauthenticated GitHub API rate limits. It is not used for Go module URL
+rewrites and is not stored in the image.
+
+UPX compression is disabled by default because this embedded binary is too large
+for UPX in the current static builder. To experiment with UPX anyway, pass
+`--build-arg NO_COMPRESS=`.
 
 Copy the binary:
 

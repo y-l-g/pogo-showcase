@@ -34,6 +34,8 @@ jobs:
                   tags: ${{ env.IMAGE_NAME }}
                   build-args: |
                       FRANKENPHP_VERSION=${{ env.FRANKENPHP_VERSION }}
+                  secrets: |
+                      github-token=${{ secrets.GITHUB_TOKEN }}
 
             - name: Extract binary
               run: |
