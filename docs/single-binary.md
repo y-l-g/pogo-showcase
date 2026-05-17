@@ -77,4 +77,29 @@ Run on a VPS after DNS points to the server:
 SERVER_NAME=pogo.y-l.fr ./pogo-showcase php-server
 ```
 
-The binary creates `./data` next to itself on first start. That directory contains the SQLite database, Laravel storage, logs, generated `APP_KEY`, and websocket secrets. Keep `./data/runtime.env` when replacing the binary so sessions and websocket authentication remain valid.
+The binary creates `./data` next to itself on first start. That directory
+contains the SQLite database, Laravel storage, logs, generated `APP_KEY`, and
+websocket secrets. Keep `./data/runtime.env` when replacing the binary so
+sessions and websocket authentication remain valid.
+
+## Runtime secrets
+
+Put production secrets in `data/runtime.env`. The binary loads this file on
+startup, preserves custom keys when it refreshes generated secrets, and uses
+normal process environment variables as overrides.
+
+Example SMTP configuration:
+
+```bash
+cat >> data/runtime.env <<'EOF'
+MAIL_MAILER=smtp
+MAIL_HOST=smtp.example.com
+MAIL_PORT=587
+MAIL_USERNAME=your-smtp-user
+MAIL_PASSWORD=your-smtp-password
+MAIL_FROM_ADDRESS=no-reply@pogo.y-l.fr
+MAIL_FROM_NAME="Pogo Showcase"
+EOF
+```
+
+Restart the binary after editing `data/runtime.env`.
