@@ -12,6 +12,11 @@ GITHUB_TOKEN="$(gh auth token)" docker buildx build --load \
  ..
 ```
 
+The embedded Laravel app is built from the local `pogoShowcase` checkout. The
+Go/Caddy modules are resolved from GitHub `main` during the static build:
+`pogo`, `queue`, `scheduler`, `websocket`, and `pogo-showcase/runtime`. Push
+changes to those repositories before building if the binary must include them.
+
 Compression with UPX is disabled by default. To explicitly try UPX compression:
 
 ```bash
