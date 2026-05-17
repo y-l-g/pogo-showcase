@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Fortify\Features;
 
 use function Pest\Laravel\assertAuthenticated;
@@ -10,7 +11,7 @@ use function Pest\Laravel\assertGuest;
 use function Pest\Laravel\get;
 use function Pest\Laravel\post;
 
-uses(\Illuminate\Foundation\Testing\RefreshDatabase::class);
+uses(RefreshDatabase::class);
 
 it('can render the login screen', function (): void {
     get(route('login'))->assertOk();
@@ -28,7 +29,7 @@ it('allows users to authenticate using the login screen', function (): void {
 });
 
 it('redirects users with two-factor enabled to the two-factor challenge', function (): void {
-    if (!Features::canManageTwoFactorAuthentication()) {
+    if (! Features::canManageTwoFactorAuthentication()) {
         $this->markTestSkipped('Two-factor authentication is not enabled.');
     }
 

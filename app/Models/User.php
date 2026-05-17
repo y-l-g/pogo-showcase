@@ -7,9 +7,10 @@ namespace App\Models;
 use Database\Factories\UserFactory;
 use Illuminate\Auth\MustVerifyEmail;
 use Illuminate\Contracts\Auth\MustVerifyEmail as MustVerifyEmailContract;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -34,7 +35,7 @@ use Laravel\Socialite\Two\User as SocialiteUser;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read int|null $notifications_count
- * @property-read Collection<int, \App\Models\SocialAccount> $socialAccounts
+ * @property-read Collection<int, SocialAccount> $socialAccounts
  * @property-read int|null $social_accounts_count
  *
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
@@ -58,26 +59,24 @@ use Laravel\Socialite\Two\User as SocialiteUser;
  *
  * @mixin \Eloquent
  */
+#[Fillable([
+    'name',
+    'email',
+    'password',
+    'primary_color',
+    'secondary_color',
+    'neutral_color',
+])]
+#[Hidden([
+    'password',
+    'remember_token',
+    'two_factor_secret',
+    'two_factor_recovery_codes',
+])]
 class User extends Authenticatable implements MustVerifyEmailContract
 {
     /** @use HasFactory<UserFactory> */
     use HasFactory, MustVerifyEmail, Notifiable, TwoFactorAuthenticatable;
-
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-        'primary_color',
-        'secondary_color',
-        'neutral_color',
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-        'two_factor_secret',
-        'two_factor_recovery_codes',
-    ];
 
     protected function casts(): array
     {

@@ -28,9 +28,7 @@ final class FetchOpenMeteoJob implements JobInterface
     {
         $kind = (string) ($args['kind'] ?? 'current_weather');
 
-        if (! array_key_exists($kind, self::ENDPOINTS)) {
-            throw new InvalidArgumentException("Unsupported Open-Meteo job [{$kind}].");
-        }
+        throw_unless(array_key_exists($kind, self::ENDPOINTS), InvalidArgumentException::class, "Unsupported Open-Meteo job [{$kind}].");
 
         $latitude = (float) ($args['latitude'] ?? 0);
         $longitude = (float) ($args['longitude'] ?? 0);
@@ -40,9 +38,7 @@ final class FetchOpenMeteoJob implements JobInterface
             ? ($this->fetcher)(self::ENDPOINTS[$kind], $query, $timeout)
             : $this->fetchJson(self::ENDPOINTS[$kind], $query, $timeout);
 
-        if (! is_array($payload)) {
-            throw new RuntimeException('Open-Meteo returned an invalid payload.');
-        }
+        throw_unless(is_array($payload), RuntimeException::class, 'Open-Meteo returned an invalid payload.');
 
         return match ($kind) {
             'current_weather' => $this->currentWeather($payload),
@@ -106,9 +102,7 @@ final class FetchOpenMeteoJob implements JobInterface
 
         $body = @file_get_contents($url, false, $context);
 
-        if ($body === false) {
-            throw new RuntimeException('Open-Meteo request failed.');
-        }
+        throw_if($body === false, RuntimeException::class, 'Open-Meteo request failed.');
 
         $statusLine = $http_response_header[0] ?? '';
         if (preg_match('/\s(\d{3})\s/', $statusLine, $matches) === 1 && (int) $matches[1] >= 400) {
@@ -117,9 +111,7 @@ final class FetchOpenMeteoJob implements JobInterface
 
         $decoded = json_decode($body, true, 512, JSON_THROW_ON_ERROR);
 
-        if (! is_array($decoded)) {
-            throw new RuntimeException('Open-Meteo returned non-object JSON.');
-        }
+        throw_unless(is_array($decoded), RuntimeException::class, 'Open-Meteo returned non-object JSON.');
 
         return $decoded;
     }

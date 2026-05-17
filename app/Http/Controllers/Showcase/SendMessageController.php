@@ -6,8 +6,9 @@ namespace App\Http\Controllers\Showcase;
 
 use App\Events\ChatMessage;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 
 final class SendMessageController extends Controller
 {
@@ -18,15 +19,11 @@ final class SendMessageController extends Controller
             'type' => ['required', 'string', 'in:public,private,presence'],
         ]);
 
-        /** @var \App\Models\User $user */
+        /** @var User $user */
         $user = $request->user();
 
-        ChatMessage::dispatch(
-            $user,
-            (string) $validated['content'],
-            (string) $validated['type']
-        );
+        event(new ChatMessage($user, (string) $validated['content'], (string) $validated['type']));
 
-        return redirect()->back();
+        return back();
     }
 }

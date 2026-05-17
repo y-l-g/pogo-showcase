@@ -25,8 +25,7 @@ final class RunPogoDemoController extends Controller
         $mode = (string) $validated['mode'];
 
         if ($mode === 'parallel' && ! $pogo->available()) {
-            return redirect()
-                ->route('showcase.pogo')
+            return to_route('showcase.pogo')
                 ->withInput()
                 ->with('error', 'The Pogo extension is not loaded in this PHP runtime.');
         }
@@ -58,12 +57,10 @@ final class RunPogoDemoController extends Controller
 
             $label = $mode === 'parallel' ? 'Pogo parallel' : 'Standard PHP';
 
-            return redirect()
-                ->route('showcase.pogo')
+            return to_route('showcase.pogo')
                 ->with('success', "{$label} fetched {$location['display']} in {$elapsedMs}ms.");
         } catch (Throwable $e) {
-            return redirect()
-                ->route('showcase.pogo')
+            return to_route('showcase.pogo')
                 ->withInput()
                 ->with('error', 'Pogo demo failed: '.$e->getMessage());
         }
@@ -89,9 +86,7 @@ final class RunPogoDemoController extends Controller
 
         $location = $response->json('results.0');
 
-        if (! is_array($location)) {
-            throw new RuntimeException("No Open-Meteo location found for {$city}.");
-        }
+        throw_unless(is_array($location), RuntimeException::class, "No Open-Meteo location found for {$city}.");
 
         $name = (string) ($location['name'] ?? $city);
         $admin1 = isset($location['admin1']) ? (string) $location['admin1'] : null;
@@ -161,9 +156,7 @@ final class RunPogoDemoController extends Controller
                 ->throw()
                 ->json();
 
-            if (! is_array($payload)) {
-                throw new RuntimeException('Open-Meteo returned an invalid payload.');
-            }
+            throw_unless(is_array($payload), RuntimeException::class, 'Open-Meteo returned an invalid payload.');
 
             return $payload;
         });

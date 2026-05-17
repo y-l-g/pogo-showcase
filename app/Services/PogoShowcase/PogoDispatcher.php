@@ -23,15 +23,23 @@ class PogoDispatcher
     }
 
     /**
-     * @param array<string, mixed> $args
+     * @param  array<string, mixed>  $args
      */
     public function dispatch(string $class, array $args = [], string $pool = 'default'): int
     {
+        if (! function_exists('pogo_dispatch')) {
+            throw new \RuntimeException('The Pogo extension is not loaded in this PHP runtime.');
+        }
+
         return (int) pogo_dispatch($class, $args, $pool);
     }
 
     public function await(int $handle, float $timeout = 5.0): mixed
     {
+        if (! function_exists('pogo_await')) {
+            throw new \RuntimeException('The Pogo extension is not loaded in this PHP runtime.');
+        }
+
         return pogo_await($handle, $timeout);
     }
 }

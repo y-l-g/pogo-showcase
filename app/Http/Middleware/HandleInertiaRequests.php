@@ -23,7 +23,6 @@ class HandleInertiaRequests extends Middleware
     {
         $user = $request->user();
 
-
         return [
             ...parent::share($request),
             ...AppPagePropsData::from([

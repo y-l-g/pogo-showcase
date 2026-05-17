@@ -33,6 +33,7 @@ return [
         'pogo' => [
             'driver' => 'pogo',
             'queue' => env('POGO_QUEUE', 'default'),
+            'threads' => (int) env('POGO_QUEUE_THREADS', 4),
             'retry_after' => 90,
         ],
 

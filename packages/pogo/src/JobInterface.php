@@ -7,7 +7,7 @@ namespace Pogo;
 interface JobInterface
 {
     /**
-     * @param array<mixed> $args
+     * @param  array<mixed>  $args
      */
     public function handle(array $args): mixed;
 }

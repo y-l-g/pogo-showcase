@@ -4,8 +4,14 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { scheduler } from '@/routes/showcase';
 import type { BreadcrumbItem } from '@nuxt/ui';
 
+type SchedulerData = {
+    color: string;
+    count: number;
+    last_run: string;
+};
+
 defineProps<{
-    schedulerData: Object;
+    schedulerData: SchedulerData;
 }>();
 
 const breadcrumbs = [

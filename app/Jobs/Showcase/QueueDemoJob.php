@@ -7,13 +7,14 @@ namespace App\Jobs\Showcase;
 use App\Services\QueueShowcase\QueueBoard;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Queue\Attributes\Tries;
+use Illuminate\Support\Sleep;
 use Throwable;
 
+#[Tries(1)]
 final class QueueDemoJob implements ShouldQueue
 {
     use Queueable;
-
-    public int $tries = 1;
 
     public function __construct(
         private readonly string $batchId,
@@ -27,7 +28,7 @@ final class QueueDemoJob implements ShouldQueue
         try {
             $board->markRunning($this->batchId, $this->jobId, $this->workerLane());
 
-            usleep($this->durationMs * 1000);
+            Sleep::usleep($this->durationMs * 1000);
 
             $board->markCompleted(
                 $this->batchId,
@@ -43,12 +44,12 @@ final class QueueDemoJob implements ShouldQueue
 
     public function failed(Throwable $e): void
     {
-        app(QueueBoard::class)->markFailed($this->batchId, $this->jobId, $e->getMessage());
+        resolve(QueueBoard::class)->markFailed($this->batchId, $this->jobId, $e->getMessage());
     }
 
     private function workerLane(): int
     {
-        $workers = max(1, (int) env('POGO_QUEUE_THREADS', 4));
+        $workers = max(1, (int) config('queue.connections.pogo.threads', 4));
 
         return (abs(crc32($this->jobId)) % $workers) + 1;
     }

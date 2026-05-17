@@ -1,9 +1,15 @@
-<script setup>
+<script setup lang="ts">
 import { usePoll } from '@inertiajs/vue3';
 
-defineProps({
-    schedulerData: Object,
-});
+type SchedulerData = {
+    color: string;
+    count: number;
+    last_run: string;
+};
+
+defineProps<{
+    schedulerData: SchedulerData;
+}>();
 
 usePoll(
     1000,

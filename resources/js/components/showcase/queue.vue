@@ -143,14 +143,20 @@ const submitReset = () => {
 
 <template>
     <div class="mx-auto flex w-full max-w-7xl flex-col gap-5 p-4 sm:p-6">
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+        <div
+            class="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+        >
             <div>
                 <div class="mb-2 flex flex-wrap items-center gap-2">
                     <UBadge
                         :color="queueAvailable ? 'success' : 'warning'"
                         variant="subtle"
                     >
-                        {{ queueAvailable ? 'Pogo queue ready' : 'Pogo queue unavailable' }}
+                        {{
+                            queueAvailable
+                                ? 'Pogo queue ready'
+                                : 'Pogo queue unavailable'
+                        }}
                     </UBadge>
                     <UBadge
                         :color="batch.status === 'active' ? 'info' : 'neutral'"
@@ -168,7 +174,9 @@ const submitReset = () => {
                 <UButton
                     icon="i-lucide-play"
                     :loading="runForm.processing"
-                    :disabled="runForm.processing || isActive || !queueAvailable"
+                    :disabled="
+                        runForm.processing || isActive || !queueAvailable
+                    "
                     @click="submitRun"
                 >
                     Run batch
@@ -269,7 +277,9 @@ const submitReset = () => {
                             />
                         </div>
 
-                        <div class="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                        <div
+                            class="mt-4 flex flex-wrap items-center gap-2 text-xs"
+                        >
                             <UBadge color="neutral" variant="outline">
                                 {{ (job.duration_ms / 1000).toFixed(1) }}s
                             </UBadge>

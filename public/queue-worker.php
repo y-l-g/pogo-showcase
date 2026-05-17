@@ -1,28 +1,30 @@
 <?php
 
+use Illuminate\Queue\WorkerOptions;
+use Illuminate\Support\Env;
+use Illuminate\Support\Facades\Request;
 use Laravel\Octane\ApplicationFactory;
 use Laravel\Octane\FrankenPhp\FrankenPhpClient;
 use Laravel\Octane\Worker;
-use Illuminate\Queue\WorkerOptions;
 use Pogo\Queue\Laravel\PogoJob;
 
-if ((!($_SERVER['FRANKENPHP_WORKER'] ?? false)) || !function_exists('frankenphp_handle_request')) {
+if ((! (Request::server('FRANKENPHP_WORKER') ?? false)) || ! function_exists('frankenphp_handle_request')) {
     echo 'FrankenPHP must be in worker mode to use this script.';
     exit(1);
 }
 
 ignore_user_abort(true);
 
-$basePath = $_SERVER['APP_BASE_PATH'] ?? $_ENV['APP_BASE_PATH'] ?? dirname(__DIR__);
+$basePath = Request::server('APP_BASE_PATH') ?? Env::get('APP_BASE_PATH', dirname(__DIR__));
 
-if (!file_exists($basePath . '/bootstrap/app.php')) {
+if (! file_exists($basePath.'/bootstrap/app.php')) {
     error_log("Application path not found at: $basePath");
     exit(1);
 }
 
-require_once $basePath . '/vendor/autoload.php';
+require_once $basePath.'/vendor/autoload.php';
 
-$frankenPhpClient = new FrankenPhpClient();
+$frankenPhpClient = new FrankenPhpClient;
 
 $worker = tap(new Worker(
     new ApplicationFactory($basePath),
@@ -30,16 +32,16 @@ $worker = tap(new Worker(
 ))->boot();
 
 $requestCount = 0;
-$maxRequests = $_ENV['MAX_REQUESTS'] ?? $_SERVER['MAX_REQUESTS'] ?? 1000;
+$maxRequests = Env::get('MAX_REQUESTS', Request::server('MAX_REQUESTS') ?? 1000);
 
 // Allow configuration via environment variables
-$queueConnection = $_ENV['POGO_CONNECTION'] ?? 'pogo';
-$queueName = $_ENV['POGO_QUEUE'] ?? 'default';
+$queueConnection = Env::get('POGO_CONNECTION', 'pogo');
+$queueName = Env::get('POGO_QUEUE', 'default');
 
-$queueOptions = new WorkerOptions();
+$queueOptions = new WorkerOptions;
 
 try {
-    $handleRequest = static function ($payload) use ($worker, $queueOptions, $queueConnection, $queueName) {
+    $handleRequest = static function ($payload) use ($worker, $queueOptions, $queueConnection, $queueName): void {
         try {
             $app = $worker->application();
 
@@ -56,7 +58,7 @@ try {
             $app['queue.worker']->process($queueConnection, $job, $queueOptions);
 
         } catch (Throwable $e) {
-            error_log("Worker Critical Error: " . $e->getMessage());
+            error_log('Worker Critical Error: '.$e->getMessage());
             if ($worker) {
                 try {
                     report($e);

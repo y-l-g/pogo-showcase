@@ -17,8 +17,7 @@ final class RunQueueDemoController extends Controller
         $current = $board->current();
 
         if (($current['status'] ?? null) === 'active') {
-            return redirect()
-                ->route('showcase.queue')
+            return to_route('showcase.queue')
                 ->with('error', 'A queue demo batch is already running.');
         }
 
@@ -27,23 +26,16 @@ final class RunQueueDemoController extends Controller
 
         try {
             foreach ($batch['jobs'] as $job) {
-                QueueDemoJob::dispatch(
-                    (string) $batch['id'],
-                    (string) $job['id'],
-                    (int) $job['duration_ms'],
-                    (string) $job['label'],
-                )->onConnection('pogo')->onQueue($queueName);
+                dispatch(new QueueDemoJob((string) $batch['id'], (string) $job['id'], (int) $job['duration_ms'], (string) $job['label']))->onConnection('pogo')->onQueue($queueName);
             }
         } catch (Throwable $e) {
             $board->reset();
 
-            return redirect()
-                ->route('showcase.queue')
+            return to_route('showcase.queue')
                 ->with('error', 'Queue demo failed to dispatch: '.$e->getMessage());
         }
 
-        return redirect()
-            ->route('showcase.queue')
+        return to_route('showcase.queue')
             ->with('success', sprintf('Queued %d demo jobs.', $batch['total']));
     }
 }

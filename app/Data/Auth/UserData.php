@@ -26,8 +26,7 @@ class UserData extends Data
         public readonly ?string $primaryColor,
         public readonly ?string $secondaryColor,
         public bool $hasPassword,
-    ) {
-    }
+    ) {}
 
     public static function fromModel(User $user): self
     {

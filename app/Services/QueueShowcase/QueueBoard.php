@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Cache;
 final class QueueBoard
 {
     private const CACHE_KEY = 'queue_showcase.batch';
+
     private const LOCK_KEY = 'queue_showcase.lock';
+
     private const CACHE_TTL_SECONDS = 1800;
 
     /**

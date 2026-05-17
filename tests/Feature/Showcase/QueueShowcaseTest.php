@@ -41,7 +41,7 @@ it('creates a queue demo batch and dispatches jobs', function (): void {
 
     Queue::assertPushed(QueueDemoJob::class, 8);
 
-    $batch = app(QueueBoard::class)->current();
+    $batch = resolve(QueueBoard::class)->current();
 
     expect($batch['status'])->toBe('active')
         ->and($batch['total'])->toBe(8)
@@ -81,11 +81,11 @@ it('clears the queue demo board', function (): void {
         ->assertRedirect(route('showcase.queue'))
         ->assertSessionHas('success', 'Queue board reset.');
 
-    expect(app(QueueBoard::class)->current()['status'])->toBe('idle');
+    expect(resolve(QueueBoard::class)->current()['status'])->toBe('idle');
 });
 
 it('marks queue demo jobs as completed', function (): void {
-    $board = app(QueueBoard::class);
+    $board = resolve(QueueBoard::class);
     $batch = $board->start([[
         'id' => 'demo',
         'label' => 'Demo job',

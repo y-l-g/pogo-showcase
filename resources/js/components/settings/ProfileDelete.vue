@@ -36,9 +36,7 @@ const deleteProfile = (close: () => void) => {
             leadingIcon: 'text-error',
         }"
     >
-        <template
-            #description
-            v-if="page.props.user.hasPassword"
+        <template #description v-if="page.props.user.hasPassword"
             >Delete your account and all of its resources.</template
         >
         <template #description v-else-if="!page.props.user.hasPassword"

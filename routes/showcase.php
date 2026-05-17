@@ -11,8 +11,8 @@ use App\Http\Controllers\Showcase\ShowQueueController;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
-Route::middleware(['auth', 'verified', 'nossr'])->group(function () {
-    Route::get('/chat', fn() => Inertia::render('showcase/Chat'))->name('showcase.chat');
+Route::middleware(['auth', 'verified', 'nossr'])->group(function (): void {
+    Route::get('/chat', fn () => Inertia::render('showcase/Chat'))->name('showcase.chat');
     Route::post('/chat/message', SendMessageController::class)->name('showcase.chat.message');
 
     Route::get('/pogo', ShowPogoController::class)->name('showcase.pogo');
@@ -28,7 +28,7 @@ Route::get('/showcase', function () {
         'schedulerData' => Cache::get('scheduler_showcase', [
             'color' => '#gray',
             'last_run' => 'Waiting...',
-            'count' => 0
+            'count' => 0,
         ]),
     ]);
 })->name('showcase.scheduler');

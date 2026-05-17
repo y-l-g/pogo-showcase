@@ -207,7 +207,9 @@ const cards = (result: RunResult | null) => {
                     <div v-else class="space-y-5">
                         <div class="flex items-end justify-between gap-3">
                             <div>
-                                <p class="text-sm text-muted">Resolved location</p>
+                                <p class="text-sm text-muted">
+                                    Resolved location
+                                </p>
                                 <p class="text-xl font-semibold">
                                     {{ sequentialResult.location.display }}
                                 </p>
@@ -228,7 +230,9 @@ const cards = (result: RunResult | null) => {
                             >
                                 <div class="mb-3 flex items-center gap-2">
                                     <UIcon :name="item.icon" class="size-5" />
-                                    <h3 class="font-medium">{{ item.title }}</h3>
+                                    <h3 class="font-medium">
+                                        {{ item.title }}
+                                    </h3>
                                 </div>
                                 <p class="text-xl font-semibold">
                                     {{ item.primary }}
@@ -277,7 +281,9 @@ const cards = (result: RunResult | null) => {
                     <div v-else class="space-y-5">
                         <div class="flex items-end justify-between gap-3">
                             <div>
-                                <p class="text-sm text-muted">Resolved location</p>
+                                <p class="text-sm text-muted">
+                                    Resolved location
+                                </p>
                                 <p class="text-xl font-semibold">
                                     {{ parallelResult.location.display }}
                                 </p>
@@ -301,7 +307,9 @@ const cards = (result: RunResult | null) => {
                             >
                                 <div class="mb-3 flex items-center gap-2">
                                     <UIcon :name="item.icon" class="size-5" />
-                                    <h3 class="font-medium">{{ item.title }}</h3>
+                                    <h3 class="font-medium">
+                                        {{ item.title }}
+                                    </h3>
                                 </div>
                                 <p class="text-xl font-semibold">
                                     {{ item.primary }}

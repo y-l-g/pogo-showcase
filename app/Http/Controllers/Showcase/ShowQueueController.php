@@ -18,7 +18,7 @@ final class ShowQueueController extends Controller
         return Inertia::render('showcase/Queue', [
             'queueAvailable' => function_exists('pogo_queue') && ($stats['driver_ready'] ?? false) === true,
             'queueStats' => $stats,
-            'workerCount' => max(1, (int) env('POGO_QUEUE_THREADS', 4)),
+            'workerCount' => max(1, (int) config('queue.connections.pogo.threads', 4)),
             'batch' => $board->current(),
         ]);
     }

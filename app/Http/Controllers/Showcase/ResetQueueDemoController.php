@@ -14,8 +14,7 @@ final class ResetQueueDemoController extends Controller
     {
         $board->reset();
 
-        return redirect()
-            ->route('showcase.queue')
+        return to_route('showcase.queue')
             ->with('success', 'Queue board reset.');
     }
 }

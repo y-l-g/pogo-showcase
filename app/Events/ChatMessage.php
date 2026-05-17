@@ -23,8 +23,7 @@ final class ChatMessage implements ShouldBroadcastNow
         public readonly User $user,
         public readonly string $content,
         public readonly string $type
-    ) {
-    }
+    ) {}
 
     public function broadcastOn(): Channel
     {

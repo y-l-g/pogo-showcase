@@ -17,6 +17,5 @@ final class AppPagePropsData extends Data
         #[AutoClosureLazy()]
         public readonly Lazy|null|UserData $user,
         public readonly FlashData $flash
-    ) {
-    }
+    ) {}
 }
