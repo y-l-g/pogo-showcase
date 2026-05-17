@@ -14,7 +14,7 @@ const pogoAppId = import.meta.env.VITE_POGO_APP_ID || 'pogo-app';
 const pogoWsPort = Number(import.meta.env.VITE_POGO_PORT || 80);
 const pogoWssPort = Number(import.meta.env.VITE_POGO_WSS_PORT || 443);
 const pogoForceTls = window.location.protocol === 'https:';
-const pogoTransports = (pogoForceTls ? ['wss'] : ['ws']) as ['wss'] | ['ws'];
+const pogoTransports = ['ws'] as ['ws'];
 const csrfToken = document
     .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
     ?.getAttribute('content');
@@ -28,7 +28,7 @@ const pogoClient = new Pusher(pogoAppId, {
     wsPort: pogoWsPort,
     wssPort: pogoWssPort,
     forceTLS: pogoForceTls,
-    disableStats: true,
+    enableStats: false,
     enabledTransports: pogoTransports,
     channelAuthorization: {
         endpoint: '/pogo/auth',
@@ -51,7 +51,7 @@ configureEcho({
     wssPort: pogoWssPort,
     forceTLS: pogoForceTls,
     enabledTransports: pogoTransports,
-    disableStats: true,
+    enableStats: false,
     client: pogoClient,
 });
 
