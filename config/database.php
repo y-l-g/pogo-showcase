@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Str;
+use Pdo\Mysql;
 
 $mysqlSslOptions = static function (): array {
     if (! extension_loaded('pdo_mysql')) {
@@ -9,8 +10,8 @@ $mysqlSslOptions = static function (): array {
 
     $attribute = null;
 
-    if (defined(Pdo\Mysql::class.'::ATTR_SSL_CA')) {
-        $attribute = constant(Pdo\Mysql::class.'::ATTR_SSL_CA');
+    if (defined(Mysql::class.'::ATTR_SSL_CA')) {
+        $attribute = constant(Mysql::class.'::ATTR_SSL_CA');
     } elseif (defined(PDO::class.'::MYSQL_ATTR_SSL_CA')) {
         $attribute = constant(PDO::class.'::MYSQL_ATTR_SSL_CA');
     }

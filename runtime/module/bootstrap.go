@@ -17,6 +17,7 @@ import (
 	"github.com/caddyserver/caddy/v2/caddyconfig"
 	"github.com/caddyserver/caddy/v2/caddyconfig/caddyfile"
 	"github.com/caddyserver/caddy/v2/caddyconfig/httpcaddyfile"
+	"github.com/dunglas/frankenphp"
 )
 
 const appName = "aaa_pogo_showcase_bootstrap"
@@ -74,6 +75,10 @@ func (b *Bootstrap) prepareEnvironment() (string, error) {
 	}
 
 	if err := mkdirs(dataDir); err != nil {
+		return "", err
+	}
+
+	if err := chdirEmbeddedApp(); err != nil {
 		return "", err
 	}
 
@@ -141,6 +146,19 @@ func (b *Bootstrap) prepareEnvironment() (string, error) {
 	}
 
 	return dataDir, nil
+}
+
+func chdirEmbeddedApp() error {
+	if frankenphp.EmbeddedAppPath == "" {
+		return nil
+	}
+	if err := os.Setenv("POGO_SHOWCASE_APP_PATH", frankenphp.EmbeddedAppPath); err != nil {
+		return fmt.Errorf("set POGO_SHOWCASE_APP_PATH: %w", err)
+	}
+	if err := os.Chdir(frankenphp.EmbeddedAppPath); err != nil {
+		return fmt.Errorf("change directory to embedded app: %w", err)
+	}
+	return nil
 }
 
 func (b *Bootstrap) migrate(dataDir string) error {
