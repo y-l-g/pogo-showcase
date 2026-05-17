@@ -27,7 +27,7 @@ RUN rm -rf \
 		public/hot \
 		public/storage \
 	&& cp .env.example .env \
-	&& export APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= WS_APP_SECRET=static-build-secret POGO_WEBHOOK_SECRET=static-build-webhook-secret \
+	&& export APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= WS_APP_SECRET=static-build-secret POGO_WEBHOOK_SECRET=static-build-webhook-secret CACHE_STORE=array \
 	&& composer install \
 		--ignore-platform-reqs \
 		--no-dev \
