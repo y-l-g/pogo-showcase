@@ -65,7 +65,6 @@
 	route /app/* {
 		pogo_websocket {
 			app_id pogo-app
-			app_secret {$WS_APP_SECRET}
 			auth_path /pogo/auth
 			auth_script public/websocket-worker.php
 
