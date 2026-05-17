@@ -1,11 +1,24 @@
 <?php
 
 use Illuminate\Support\Str;
-use Pdo\Mysql;
 
-$mysqlSslCaAttribute = class_exists(Mysql::class)
-    ? Mysql::ATTR_SSL_CA
-    : PDO::MYSQL_ATTR_SSL_CA;
+$mysqlSslOptions = static function (): array {
+    if (! extension_loaded('pdo_mysql')) {
+        return [];
+    }
+
+    $attribute = null;
+
+    if (defined(Pdo\Mysql::class.'::ATTR_SSL_CA')) {
+        $attribute = constant(Pdo\Mysql::class.'::ATTR_SSL_CA');
+    } elseif (defined(PDO::class.'::MYSQL_ATTR_SSL_CA')) {
+        $attribute = constant(PDO::class.'::MYSQL_ATTR_SSL_CA');
+    }
+
+    return $attribute === null ? [] : array_filter([
+        $attribute => env('MYSQL_ATTR_SSL_CA'),
+    ]);
+};
 
 return [
 
@@ -63,9 +76,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                $mysqlSslCaAttribute => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            'options' => $mysqlSslOptions(),
         ],
 
         'mariadb' => [
@@ -83,9 +94,7 @@ return [
             'prefix_indexes' => true,
             'strict' => true,
             'engine' => null,
-            'options' => extension_loaded('pdo_mysql') ? array_filter([
-                $mysqlSslCaAttribute => env('MYSQL_ATTR_SSL_CA'),
-            ]) : [],
+            'options' => $mysqlSslOptions(),
         ],
 
         'pgsql' => [
