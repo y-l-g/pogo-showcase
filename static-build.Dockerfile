@@ -24,6 +24,8 @@ RUN rm -rf \
 		storage/framework/views/* \
 		bootstrap/cache/*.php \
 		.env \
+		public/build \
+		public/hot \
 		public/storage \
 	&& cp .env.example .env \
 	&& export APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA= WS_APP_SECRET=static-build-secret POGO_WEBHOOK_SECRET=static-build-webhook-secret \
@@ -37,6 +39,15 @@ RUN rm -rf \
 	&& php artisan package:discover --ansi \
 	&& php artisan wayfinder:generate --with-form --ansi \
 	&& php artisan optimize:clear --ansi
+
+FROM node:25-bookworm-slim AS asset-builder
+
+WORKDIR /workspace/app
+COPY --from=app-builder /workspace/app/ ./
+
+RUN npm ci --legacy-peer-deps \
+	&& POGO_SKIP_WAYFINDER_VITE=1 npm run build \
+	&& rm -rf node_modules public/hot
 
 FROM --platform=${STATIC_BUILDER_PLATFORM} dunglas/frankenphp:static-builder-gnu
 
@@ -63,7 +74,7 @@ COPY websocket/ /src/websocket/
 COPY pogoShowcase/runtime/ /src/pogo-showcase/runtime/
 
 WORKDIR /go/src/app/dist/app
-COPY --from=app-builder /workspace/app/ ./
+COPY --from=asset-builder /workspace/app/ ./
 
 WORKDIR /go/src/app
 RUN --mount=type=secret,id=github-token,required=false \
