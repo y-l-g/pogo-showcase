@@ -7,7 +7,7 @@ FROM serversideup/php:8.5.6-frankenphp-trixie AS app-builder
 USER root
 
 WORKDIR /workspace/app
-COPY pogoShowcase/ ./
+COPY . ./
 
 RUN rm -rf \
 		node_modules \
@@ -65,9 +65,6 @@ ENV CI=${CI} \
 	PHP_EXTENSION_LIBS=${PHP_EXTENSION_LIBS} \
 	SPC_CMD_VAR_FRANKENPHP_XCADDY_MODULES=${XCADDY_ARGS} \
 	COMPRESS=${COMPRESS}
-
-WORKDIR /go/src/app
-COPY frankenphp-main/ ./
 
 WORKDIR /go/src/app/dist/app
 COPY --from=asset-builder /workspace/app/ ./

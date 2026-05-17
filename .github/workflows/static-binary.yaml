@@ -22,15 +22,6 @@ jobs:
         steps:
             - name: Checkout Pogo Showcase
               uses: actions/checkout@v6
-              with:
-                  path: build-context/pogoShowcase
-
-            - name: Checkout FrankenPHP
-              uses: actions/checkout@v6
-              with:
-                  repository: php/frankenphp
-                  ref: v${{ env.FRANKENPHP_VERSION }}
-                  path: build-context/frankenphp-main
 
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
@@ -38,8 +29,8 @@ jobs:
             - name: Build image with embedded app
               uses: docker/build-push-action@v7
               with:
-                  context: build-context
-                  file: build-context/pogoShowcase/static-build.Dockerfile
+                  context: .
+                  file: static-build.Dockerfile
                   load: true
                   tags: ${{ env.IMAGE_NAME }}
                   build-args: |
