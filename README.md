@@ -1,29 +1,48 @@
-# Another Laravel Starter Kit
+# Pogo Showcase
 
-Launch your next application faster than ever. A production-ready, feature-rich boilerplate built on a solid architectural foundation.
+Pogo Showcase is a demonstration Laravel/Vue application for the Pogo
+FrankenPHP extension suite.
 
-## ✨ Core Features
+It exists to show how a PHP application can be compiled and deployed as a
+single static FrankenPHP binary containing:
 
-Save weeks of development time with essential features already built, tested, and beautifully integrated.
+- Laravel and Vue/Inertia frontend assets.
+- FrankenPHP, Caddy, and PHP.
+- Pogo request-scoped parallel jobs.
+- Pogo Queue for in-memory background work.
+- Pogo WebSocket for realtime broadcasting.
+- Pogo Scheduler for embedded scheduled command execution.
+- A small runtime bootstrap that prepares SQLite storage, generated secrets,
+  Laravel storage paths, and migrations.
 
-- 🔐 **Complete Authentication**: Secure, ready-to-use authentication system powered by Laravel Fortify (Two-Factor Auth, registration, login, password reset, and email verification).
-- 🌐 **Socialite Logins**: Allow users to register and log in effortlessly using their Google and GitHub accounts.
-- 🎨 **Dynamic Theming**: Users can personalize their experience by choosing primary, secondary, and neutral colors for the UI.
-- 📄 **Static Markdown Pages**: Easily create and manage static content like Privacy Policy or Terms of Service pages using simple Markdown files.
-- 💬 **Flash Message Toasts**: Provide clear user feedback with beautifully rendered toast notifications.
+## Production status
 
-## 🏛️ Architectural Pillars
+This repository is a showcase and reference app. It should not be treated as a
+production application template.
 
-- **Robust & Modern Backend**: Built on the latest **Laravel 12** with **PHP 8.5**. We enforce strict typing and high code quality standards for a robust foundation.
-- **Clean & Scalable Architecture**: Logic is neatly organized for scalability. Data integrity is guaranteed by strongly-typed DTOs via `Spatie/Laravel-Data`.
-- **SEO-Ready with SSR**: **Server-Side Rendering** is ready out-of-the-box with Nuxt, ensuring optimal performance and excellent SEO for your public-facing pages.
+The included Pogo modules are experimental. Use the showcase to evaluate the
+architecture, static-binary deployment model, and developer experience before
+adopting any module in a production system.
 
-## 🛠️ Tech Stack
+## Static binary
 
-- **Backend**: Laravel 12
-- **Frontend**: Vue 3
-- **UI Framework**: Nuxt UI 4
-- **Backend/Frontend Bridge**: Inertia.js
-- **Authentication**: Laravel Fortify
-- **Deployment**: Ready for production.
+See [docs/single-binary.md](docs/single-binary.md) for the current build and run
+instructions.
 
+The binary creates a `data/` directory next to itself on first start. That
+directory stores the SQLite database, Laravel storage, logs, generated app key,
+and WebSocket secrets.
+
+## Local development
+
+This app is still a Laravel/Vue project during development:
+
+```bash
+composer install
+npm install
+cp .env.example .env
+php artisan key:generate
+php artisan migrate
+npm run build
+php artisan test
+```

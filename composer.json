@@ -1,11 +1,13 @@
 {
     "$schema": "https://getcomposer.org/schema.json",
-    "name": "laravel/vue-starter-kit",
+    "name": "pogo/showcase",
     "type": "project",
-    "description": "The skeleton application for the Laravel framework.",
+    "description": "A Laravel/Vue showcase for Pogo FrankenPHP extensions and static binary deployment.",
     "keywords": [
+        "frankenphp",
+        "pogo",
         "laravel",
-        "framework"
+        "static-binary"
     ],
     "license": "MIT",
     "require": {
