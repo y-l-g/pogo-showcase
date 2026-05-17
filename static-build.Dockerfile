@@ -8,7 +8,6 @@ USER root
 
 WORKDIR /workspace/app
 COPY pogoShowcase/ ./
-COPY queue/packages/laravel/ /workspace/queue/packages/laravel/
 
 RUN rm -rf \
 		node_modules \
@@ -51,18 +50,21 @@ RUN npm ci --legacy-peer-deps \
 
 FROM --platform=${STATIC_BUILDER_PLATFORM} dunglas/frankenphp:static-builder-gnu
 
+ARG CI=true
+ARG FRANKENPHP_VERSION=1.12.3
 ARG PHP_VERSION=8.5.6
 ARG COMPRESS=""
 ARG PHP_EXTENSIONS="bcmath,ctype,curl,dom,fileinfo,filter,iconv,intl,mbstring,opcache,openssl,pcntl,pdo,pdo_sqlite,phar,posix,session,simplexml,sodium,sqlite3,tokenizer,xml,xmlreader,xmlwriter,zip,zlib"
 ARG PHP_EXTENSION_LIBS="libavif,nghttp2,nghttp3,ngtcp2,watcher,bzip2,xz,zstd,libssh2,ldap"
-ARG XCADDY_ARGS="--with github.com/dunglas/caddy-cbrotli --with github.com/dunglas/mercure/caddy --with github.com/dunglas/vulcain/caddy --with github.com/y-l-g/pogo/module@main --with github.com/y-l-g/queue/module@main --with github.com/y-l-g/scheduler/module@main --with github.com/y-l-g/websocket/module@main --with github.com/y-l-g/pogo-showcase/runtime/module@main"
+ARG XCADDY_ARGS="--with github.com/dunglas/caddy-cbrotli --with github.com/dunglas/mercure/caddy --with github.com/dunglas/vulcain/caddy --with github.com/y-l-g/pogo/module@main --with github.com/y-l-g/queue/module@main --with github.com/y-l-g/scheduler/module@main --with github.com/y-l-g/websocket/module@main --with github.com/y-l-g/pogo-showcase/runtime/module=./dist/app/runtime/module"
 
-ENV PHP_VERSION=${PHP_VERSION}
-ENV PHP_EXTENSIONS=${PHP_EXTENSIONS}
-ENV PHP_EXTENSION_LIBS=${PHP_EXTENSION_LIBS}
-ENV XCADDY_ARGS=${XCADDY_ARGS}
-ENV SPC_CMD_VAR_FRANKENPHP_XCADDY_MODULES=${XCADDY_ARGS}
-ENV COMPRESS=${COMPRESS}
+ENV CI=${CI} \
+	FRANKENPHP_VERSION=${FRANKENPHP_VERSION} \
+	PHP_VERSION=${PHP_VERSION} \
+	PHP_EXTENSIONS=${PHP_EXTENSIONS} \
+	PHP_EXTENSION_LIBS=${PHP_EXTENSION_LIBS} \
+	SPC_CMD_VAR_FRANKENPHP_XCADDY_MODULES=${XCADDY_ARGS} \
+	COMPRESS=${COMPRESS}
 
 WORKDIR /go/src/app
 COPY frankenphp-main/ ./
@@ -72,7 +74,7 @@ COPY --from=asset-builder /workspace/app/ ./
 
 WORKDIR /go/src/app
 RUN --mount=type=secret,id=github-token,required=false \
-	if [ -f /run/secrets/github-token ]; then \
+	if [ -s /run/secrets/github-token ]; then \
 		export GITHUB_TOKEN="$(cat /run/secrets/github-token)"; \
 		export GOPRIVATE=github.com/y-l-g/*; \
 		git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
