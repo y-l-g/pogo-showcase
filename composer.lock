@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "25bad3c936f1c641f78749d5d7e176fe",
+    "content-hash": "09507e46448a6b50b6c1e3aa9ee71032",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -4016,16 +4016,23 @@
         {
             "name": "pogo/laravel-queue",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/y-l-g/laravel-queue.git",
+                "reference": "eef6b2ae47cecc7f5db1a0b8d7fd5efb3331aa8d"
+            },
             "dist": {
-                "type": "path",
-                "url": "../queue/packages/laravel",
-                "reference": "e2f1d58cb3cd20f17d64a8de3f3842e39f2739dc"
+                "type": "zip",
+                "url": "https://api.github.com/repos/y-l-g/laravel-queue/zipball/eef6b2ae47cecc7f5db1a0b8d7fd5efb3331aa8d",
+                "reference": "eef6b2ae47cecc7f5db1a0b8d7fd5efb3331aa8d",
+                "shasum": ""
             },
             "require": {
                 "laravel/framework": "^13.0",
                 "laravel/octane": "^2.0",
                 "php": "^8.5"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -4039,50 +4046,56 @@
                     "Pogo\\Queue\\Laravel\\": "src/"
                 }
             },
-            "autoload-dev": {
-                "psr-4": {
-                    "Pogo\\Queue\\Laravel\\Tests\\": "tests/"
-                }
-            },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Pogo Queue Driver for Laravel",
-            "transport-options": {
-                "symlink": false,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/y-l-g/laravel-queue/issues",
+                "source": "https://github.com/y-l-g/laravel-queue/tree/v0.0.9"
+            },
+            "time": "2026-05-14T11:25:15+00:00"
         },
         {
             "name": "pogo/pogo",
             "version": "dev-main",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/y-l-g/pogo.git",
+                "reference": "f0bd4cdc55b3e1efd824317ccd6e6f6752541088"
+            },
             "dist": {
-                "type": "path",
-                "url": "packages/pogo",
-                "reference": "68102a37312a70fd7523f7c6e0f424c4ca191c96"
+                "type": "zip",
+                "url": "https://api.github.com/repos/y-l-g/pogo/zipball/f0bd4cdc55b3e1efd824317ccd6e6f6752541088",
+                "reference": "f0bd4cdc55b3e1efd824317ccd6e6f6752541088",
+                "shasum": ""
             },
             "require": {
                 "ext-json": "*",
                 "php": ">=8.4"
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
                     "Pogo\\": "src/"
                 }
             },
+            "notification-url": "https://packagist.org/downloads/",
             "license": [
                 "MIT"
             ],
             "description": "Request-scoped parallel PHP jobs for FrankenPHP.",
-            "transport-options": {
-                "symlink": true,
-                "relative": true
-            }
+            "support": {
+                "issues": "https://github.com/y-l-g/pogo/issues",
+                "source": "https://github.com/y-l-g/pogo/tree/main"
+            },
+            "time": "2026-05-15T22:20:48+00:00"
         },
         {
             "name": "pogo/websocket",
-            "version": "v0.0.8",
+            "version": "dev-main",
             "source": {
                 "type": "git",
                 "url": "https://github.com/y-l-g/websocket.git",
@@ -4104,6 +4117,7 @@
                 "phpstan/phpstan": "^2.0",
                 "phpunit/phpunit": "^13.0"
             },
+            "default-branch": true,
             "type": "library",
             "extra": {
                 "laravel": {
@@ -11720,23 +11734,23 @@
         },
         {
             "name": "sebastian/cli-parser",
-            "version": "4.2.0",
+            "version": "4.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/cli-parser.git",
-                "reference": "90f41072d220e5c40df6e8635f5dafba2d9d4d04"
+                "reference": "7d05781b13f7dec9043a629a21d086ed74582a15"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/cli-parser/zipball/90f41072d220e5c40df6e8635f5dafba2d9d4d04",
-                "reference": "90f41072d220e5c40df6e8635f5dafba2d9d4d04",
+                "url": "https://api.github.com/repos/sebastianbergmann/cli-parser/zipball/7d05781b13f7dec9043a629a21d086ed74582a15",
+                "reference": "7d05781b13f7dec9043a629a21d086ed74582a15",
                 "shasum": ""
             },
             "require": {
                 "php": ">=8.3"
             },
             "require-dev": {
-                "phpunit/phpunit": "^12.0"
+                "phpunit/phpunit": "^12.5.25"
             },
             "type": "library",
             "extra": {
@@ -11765,7 +11779,7 @@
             "support": {
                 "issues": "https://github.com/sebastianbergmann/cli-parser/issues",
                 "security": "https://github.com/sebastianbergmann/cli-parser/security/policy",
-                "source": "https://github.com/sebastianbergmann/cli-parser/tree/4.2.0"
+                "source": "https://github.com/sebastianbergmann/cli-parser/tree/4.2.1"
             },
             "funding": [
                 {
@@ -11785,7 +11799,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-09-14T09:36:45+00:00"
+            "time": "2026-05-17T05:29:34+00:00"
         },
         {
             "name": "sebastian/comparator",
@@ -12856,7 +12870,8 @@
     "minimum-stability": "dev",
     "stability-flags": {
         "pogo/laravel-queue": 20,
-        "pogo/pogo": 20
+        "pogo/pogo": 20,
+        "pogo/websocket": 20
     },
     "prefer-stable": true,
     "prefer-lowest": false,
