@@ -12,8 +12,6 @@
 			file public/frankenphp-worker.php
 			num {$HTTP_WORKERS:4}
 			name http
-			env APP_BASE_PATH .
-			env APP_PUBLIC_PATH public
 			env MAX_REQUESTS {$HTTP_MAX_REQUESTS:1000}
 		}
 	}
@@ -67,6 +65,7 @@
 	route /app/* {
 		pogo_websocket {
 			app_id pogo-app
+			app_secret {$WS_APP_SECRET}
 			auth_path /pogo/auth
 			auth_script public/websocket-worker.php
 

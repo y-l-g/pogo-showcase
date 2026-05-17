@@ -55,19 +55,32 @@ func (b *Bootstrap) Stop() error {
 }
 
 func (b *Bootstrap) bootstrap() error {
-	dataDir, err := b.resolveDataDir()
+	dataDir, err := b.prepareEnvironment()
 	if err != nil {
 		return err
 	}
 
+	if b.SkipMigrate || envBool("POGO_SHOWCASE_SKIP_MIGRATE") {
+		return nil
+	}
+
+	return b.migrate(dataDir)
+}
+
+func (b *Bootstrap) prepareEnvironment() (string, error) {
+	dataDir, err := b.resolveDataDir()
+	if err != nil {
+		return "", err
+	}
+
 	if err := mkdirs(dataDir); err != nil {
-		return err
+		return "", err
 	}
 
 	envPath := filepath.Join(dataDir, "runtime.env")
 	values, err := readEnvFile(envPath)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	if _, ok := values["APP_KEY"]; !ok {
@@ -81,7 +94,7 @@ func (b *Bootstrap) bootstrap() error {
 	}
 
 	if err := writeEnvFile(envPath, values); err != nil {
-		return err
+		return "", err
 	}
 
 	dbPath := filepath.Join(dataDir, "database.sqlite")
@@ -98,7 +111,6 @@ func (b *Bootstrap) bootstrap() error {
 		"BROADCAST_CONNECTION": "pogo",
 		"WS_APP_ID":            "pogo-app",
 		"WS_APP_SECRET":        values["WS_APP_SECRET"],
-		"POGO_WS_APP_SECRET":   values["WS_APP_SECRET"],
 		"POGO_WEBHOOK_SECRET":  values["POGO_WEBHOOK_SECRET"],
 		"CACHE_STORE":          "database",
 		"SESSION_DRIVER":       "database",
@@ -112,27 +124,23 @@ func (b *Bootstrap) bootstrap() error {
 	for key, value := range defaults {
 		if os.Getenv(key) == "" {
 			if err := os.Setenv(key, value); err != nil {
-				return fmt.Errorf("set %s: %w", key, err)
+				return "", fmt.Errorf("set %s: %w", key, err)
 			}
 		}
 	}
 
 	if _, err := os.Stat(dbPath); err != nil {
 		if !os.IsNotExist(err) {
-			return err
+			return "", err
 		}
 		file, err := os.OpenFile(dbPath, os.O_RDONLY|os.O_CREATE, 0o600)
 		if err != nil {
-			return fmt.Errorf("create sqlite database: %w", err)
+			return "", fmt.Errorf("create sqlite database: %w", err)
 		}
 		_ = file.Close()
 	}
 
-	if b.SkipMigrate || envBool("POGO_SHOWCASE_SKIP_MIGRATE") {
-		return nil
-	}
-
-	return b.migrate(dataDir)
+	return dataDir, nil
 }
 
 func (b *Bootstrap) migrate(dataDir string) error {
@@ -210,9 +218,21 @@ func (b *Bootstrap) appURL() string {
 	}
 	first := strings.TrimSpace(strings.Split(name, ",")[0])
 	if strings.HasPrefix(first, "http://") || strings.HasPrefix(first, "https://") {
-		if parsed, err := url.Parse(first); err == nil && parsed.Host != "" {
-			return strings.TrimRight(first, "/")
+		if parsed, err := url.Parse(first); err == nil {
+			if parsed.Hostname() == "" && parsed.Port() != "" {
+				return parsed.Scheme + "://localhost:" + parsed.Port()
+			}
+			if parsed.Host == "" && (first == "http://" || first == "https://") {
+				return parsed.Scheme + "://localhost"
+			}
+			if parsed.Hostname() != "" {
+				parsed.Path = strings.TrimRight(parsed.Path, "/")
+				parsed.RawQuery = ""
+				parsed.Fragment = ""
+				return parsed.String()
+			}
 		}
+		return "http://localhost"
 	}
 	if strings.HasPrefix(first, ":") {
 		return "http://localhost" + first
@@ -324,6 +344,9 @@ func (b *Bootstrap) UnmarshalCaddyfile(d *caddyfile.Dispenser) error {
 func parseGlobalOption(d *caddyfile.Dispenser, _ any) (any, error) {
 	app := &Bootstrap{}
 	if err := app.UnmarshalCaddyfile(d); err != nil {
+		return nil, err
+	}
+	if _, err := app.prepareEnvironment(); err != nil {
 		return nil, err
 	}
 

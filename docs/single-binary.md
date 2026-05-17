@@ -30,7 +30,7 @@ chmod +x ./pogo-showcase
 Run locally without HTTPS:
 
 ```bash
-SERVER_NAME=http://:8080 ./pogo-showcase php-server
+SERVER_NAME=:8080 ./pogo-showcase php-server
 ```
 
 Run on a VPS after DNS points to the server:
