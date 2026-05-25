@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "09507e46448a6b50b6c1e3aa9ee71032",
+    "content-hash": "6ce842bc7ef7cb2faad035dd477cfb14",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -4014,6 +4014,33 @@
             "time": "2026-01-25T14:56:51+00:00"
         },
         {
+            "name": "pogo/async",
+            "version": "dev-main",
+            "dist": {
+                "type": "path",
+                "url": "packages/pogo",
+                "reference": "826f2431064c37a6f1992b8650aed80859bb5e07"
+            },
+            "require": {
+                "ext-json": "*",
+                "php": ">=8.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Pogo\\": "src/"
+                }
+            },
+            "license": [
+                "MIT"
+            ],
+            "description": "Request-scoped parallel PHP jobs for FrankenPHP.",
+            "transport-options": {
+                "symlink": true,
+                "relative": true
+            }
+        },
+        {
             "name": "pogo/laravel-queue",
             "version": "dev-main",
             "source": {
@@ -4056,42 +4083,6 @@
                 "source": "https://github.com/y-l-g/laravel-queue/tree/v0.0.9"
             },
             "time": "2026-05-14T11:25:15+00:00"
-        },
-        {
-            "name": "pogo/pogo",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/y-l-g/pogo.git",
-                "reference": "f0bd4cdc55b3e1efd824317ccd6e6f6752541088"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/y-l-g/pogo/zipball/f0bd4cdc55b3e1efd824317ccd6e6f6752541088",
-                "reference": "f0bd4cdc55b3e1efd824317ccd6e6f6752541088",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "php": ">=8.4"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Pogo\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Request-scoped parallel PHP jobs for FrankenPHP.",
-            "support": {
-                "issues": "https://github.com/y-l-g/pogo/issues",
-                "source": "https://github.com/y-l-g/pogo/tree/main"
-            },
-            "time": "2026-05-15T22:20:48+00:00"
         },
         {
             "name": "pogo/websocket",
@@ -12869,8 +12860,8 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
+        "pogo/async": 20,
         "pogo/laravel-queue": 20,
-        "pogo/pogo": 20,
         "pogo/websocket": 20
     },
     "prefer-stable": true,

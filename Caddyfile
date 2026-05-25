@@ -31,11 +31,19 @@
 	}
 
 	pogo_queue {
+		backend memory {
+			max_messages {$POGO_QUEUE_SIZE:10000}
+			max_total_bytes {$POGO_QUEUE_MAX_TOTAL_BYTES:67108864}
+		}
+
 		worker {$POGO_SHOWCASE_APP_PATH:.}/public/queue-worker.php
-		name showcaseQueue
-		size {$POGO_QUEUE_SIZE:10000}
-		max_message_bytes {$POGO_QUEUE_MAX_MESSAGE_BYTES:1048576}
-		num_threads {$POGO_QUEUE_THREADS:4}
+		queues {$POGO_QUEUE:default}
+		concurrency {$POGO_QUEUE_CONCURRENCY:4}
+		worker_threads {$POGO_QUEUE_THREADS:4}
+		max_payload_bytes {$POGO_QUEUE_MAX_MESSAGE_BYTES:1048576}
+		visibility_timeout {$POGO_QUEUE_VISIBILITY_TIMEOUT:90s}
+		shutdown_timeout {$POGO_QUEUE_SHUTDOWN_TIMEOUT:30s}
+		max_attempts {$POGO_QUEUE_MAX_ATTEMPTS:3}
 	}
 
 	pogo_scheduler {

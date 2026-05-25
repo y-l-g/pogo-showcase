@@ -1,5 +1,5 @@
 {
-  "name": "pogo/pogo",
+  "name": "pogo/async",
   "description": "Request-scoped parallel PHP jobs for FrankenPHP.",
   "type": "library",
   "license": "MIT",

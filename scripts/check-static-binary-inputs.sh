@@ -42,6 +42,65 @@ if rg -n '(^|[[:space:]])(file|worker|auth_script)[[:space:]]+public/|root[[:spa
     failed=1
 fi
 
+if awk '
+    /^[[:space:]]*pogo_queue[[:space:]]*\{/ {
+        in_queue = 1
+        depth = 1
+        next
+    }
+    in_queue {
+        line = $0
+        opens = gsub(/\{/, "{", line)
+        line = $0
+        closes = gsub(/\}/, "}", line)
+
+        if ($0 ~ /^[[:space:]]*name[[:space:]]+/) {
+            printf "%s:%d:%s\n", FILENAME, FNR, $0
+            found = 1
+        }
+
+        depth += opens - closes
+        if (depth <= 0) {
+            in_queue = 0
+        }
+    }
+    END {
+        exit found ? 0 : 1
+    }
+' Caddyfile >&2; then
+    printf 'Caddyfile pogo_queue uses unsupported "name"; configure "queues" instead.\n' >&2
+    failed=1
+fi
+
+if ! awk '
+    /^[[:space:]]*pogo_queue[[:space:]]*\{/ {
+        in_queue = 1
+        depth = 1
+        next
+    }
+    in_queue {
+        line = $0
+        opens = gsub(/\{/, "{", line)
+        line = $0
+        closes = gsub(/\}/, "}", line)
+
+        if ($0 ~ /^[[:space:]]*backend[[:space:]]+memory[[:space:]]*\{/) {
+            found = 1
+        }
+
+        depth += opens - closes
+        if (depth <= 0) {
+            in_queue = 0
+        }
+    }
+    END {
+        exit found ? 0 : 1
+    }
+' Caddyfile; then
+    printf 'Caddyfile pogo_queue must declare backend memory for the static showcase binary.\n' >&2
+    failed=1
+fi
+
 if rg -n 'Env::get|Request::server' public/*worker.php >&2; then
     printf 'Worker scripts must not call Laravel Env/Request before autoload. Use $_SERVER/$_ENV/getenv instead.\n' >&2
     failed=1
