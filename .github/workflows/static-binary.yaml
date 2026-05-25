@@ -7,16 +7,27 @@ on:
             - 'v*'
 
 env:
-    BINARY_NAME: pogo-showcase-linux-x86_64
-    IMAGE_NAME: pogo-showcase-static:ci
     FRANKENPHP_VERSION: 1.12.3
 
 jobs:
     build:
-        runs-on: ubuntu-latest
         timeout-minutes: 120
         permissions:
             contents: write
+        strategy:
+            fail-fast: false
+            matrix:
+                include:
+                    - platform: linux/amd64
+                      binary_arch: x86_64
+                      runner: ubuntu-latest
+                    - platform: linux/arm64
+                      binary_arch: aarch64
+                      runner: ubuntu-24.04-arm
+        runs-on: ${{ matrix.runner }}
+        env:
+            BINARY_NAME: pogo-showcase-linux-${{ matrix.binary_arch }}
+            IMAGE_NAME: pogo-showcase-static:${{ matrix.binary_arch }}
 
         steps:
             - name: Checkout Pogo Showcase
@@ -33,9 +44,11 @@ jobs:
               with:
                   context: .
                   file: static-build.Dockerfile
+                  platforms: ${{ matrix.platform }}
                   load: true
                   tags: ${{ env.IMAGE_NAME }}
                   build-args: |
+                      STATIC_BUILDER_PLATFORM=${{ matrix.platform }}
                       FRANKENPHP_VERSION=${{ env.FRANKENPHP_VERSION }}
                   secrets: |
                       github-token=${{ secrets.GITHUB_TOKEN }}
@@ -121,10 +134,23 @@ jobs:
                   retention-days: 30
                   if-no-files-found: error
 
+    release:
+        if: startsWith(github.ref, 'refs/tags/v')
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+
+        steps:
+            - name: Download workflow artifacts
+              uses: actions/download-artifact@v6
+              with:
+                  pattern: pogo-showcase-linux-*
+                  path: dist
+                  merge-multiple: true
+
             - name: Upload release assets
-              if: startsWith(github.ref, 'refs/tags/v')
               uses: softprops/action-gh-release@v2
               with:
                   files: |
-                      dist/${{ env.BINARY_NAME }}
-                      dist/${{ env.BINARY_NAME }}.sha256
+                      dist/*

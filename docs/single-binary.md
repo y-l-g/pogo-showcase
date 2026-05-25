@@ -2,8 +2,8 @@
 
 ## GitHub Actions build
 
-The `Build static binary` workflow builds the same Linux x86_64 binary in
-GitHub Actions.
+The `Build static binary` workflow builds Linux `x86_64` and `aarch64` binaries
+in GitHub Actions.
 
 - Run it manually from the Actions tab to download the binary as a workflow
   artifact.
@@ -35,9 +35,11 @@ Build from `pogoShowcase`:
 ```bash
 GITHUB_TOKEN="$(gh auth token)" \
 docker buildx build --load \
+  --platform=linux/amd64 \
   --network=host \
   --progress=plain \
   --secret id=github-token,env=GITHUB_TOKEN \
+  --build-arg STATIC_BUILDER_PLATFORM=linux/amd64 \
   -t pogo-showcase-static \
   -f static-build.Dockerfile \
   .
@@ -59,11 +61,15 @@ for UPX in the current static builder. To experiment with UPX anyway, pass
 Copy the binary:
 
 ```bash
+binary_arch=x86_64
 tmp="$(docker create pogo-showcase-static)"
-docker cp "$tmp:/go/src/app/dist/pogo-showcase-linux-x86_64" ./pogo-showcase
+docker cp "$tmp:/go/src/app/dist/pogo-showcase-linux-${binary_arch}" ./pogo-showcase
 docker rm "$tmp"
 chmod +x ./pogo-showcase
 ```
+
+Use `--platform=linux/arm64`, `--build-arg STATIC_BUILDER_PLATFORM=linux/arm64`,
+and `binary_arch=aarch64` to build and copy the ARM64 binary.
 
 Run locally without HTTPS:
 

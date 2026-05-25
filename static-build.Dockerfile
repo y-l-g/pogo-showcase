@@ -75,4 +75,5 @@ RUN --mount=type=secret,id=github-token,required=false \
 		export GITHUB_TOKEN="$(cat /run/secrets/github-token)"; \
 	fi \
 	&& EMBED=dist/app/ ./build-static.sh \
-	&& cp dist/frankenphp-linux-x86_64 dist/pogo-showcase-linux-x86_64
+	&& arch="$(uname -m)" \
+	&& cp "dist/frankenphp-linux-${arch}" "dist/pogo-showcase-linux-${arch}"
