@@ -87,6 +87,26 @@ it('creates a queue demo batch and dispatches jobs', function (): void {
         ->and($batch['completed'])->toBe(0);
 });
 
+it('dispatches demo jobs through the native v2 queue function', function (): void {
+    $GLOBALS['pogo_queue_push_calls'] = [];
+
+    $user = User::factory()->create();
+
+    actingAs($user)
+        ->post(route('showcase.queue.run'))
+        ->assertRedirect(route('showcase.queue'))
+        ->assertSessionHas('success', 'Queued 8 demo jobs.');
+
+    expect($GLOBALS['pogo_queue_push_calls'])->toHaveCount(8)
+        ->and($GLOBALS['pogo_queue_push_calls'][0]['queue'])->toBe('default')
+        ->and($GLOBALS['pogo_queue_push_calls'][0]['delay'])->toBe(0);
+
+    $payload = json_decode((string) $GLOBALS['pogo_queue_push_calls'][0]['payload'], true);
+
+    expect($payload)->toBeArray()
+        ->and($payload['displayName'] ?? null)->toBe(QueueDemoJob::class);
+});
+
 it('does not dispatch a second batch while one is active', function (): void {
     Queue::fake();
 
@@ -144,6 +164,7 @@ it('marks queue demo jobs as completed', function (): void {
 });
 
 afterEach(function (): void {
+    unset($GLOBALS['pogo_queue_push_calls']);
     unset($GLOBALS['pogo_queue_status_payload']);
 });
 
@@ -151,6 +172,23 @@ if (! function_exists('pogo_queue')) {
     function pogo_queue(string $data): int
     {
         return 1;
+    }
+}
+
+if (! function_exists('pogo_queue_push')) {
+    function pogo_queue_push(string $queue, string $payload, int $delaySeconds = 0): string
+    {
+        $GLOBALS['pogo_queue_push_calls'][] = [
+            'queue' => $queue,
+            'payload' => $payload,
+            'delay' => $delaySeconds,
+        ];
+
+        return json_encode([
+            'ok' => true,
+            'id' => 'test-delivery-'.count($GLOBALS['pogo_queue_push_calls']),
+            'code' => 1,
+        ], JSON_THROW_ON_ERROR);
     }
 }
 

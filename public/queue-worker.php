@@ -45,13 +45,16 @@ try {
 
             // Resolve the specifically configured connection
             $connection = $app['queue']->connection($queueConnection);
+            $delivery = is_string($payload) ? json_decode($payload, true) : null;
 
-            $job = new PogoJob(
-                $app,
-                $connection,
-                $payload,
-                $queueName
-            );
+            $job = is_array($delivery)
+                ? PogoJob::fromDelivery($app, $connection, $delivery)
+                : new PogoJob(
+                    $app,
+                    $connection,
+                    (string) $payload,
+                    $queueName
+                );
 
             $app['queue.worker']->process($queueConnection, $job, $queueOptions);
 

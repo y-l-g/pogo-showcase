@@ -48,10 +48,13 @@ const pogoChannelAuthorization: ChannelAuthorizationHandler = async (
             );
         }
 
-        const authData = (await response.json()) as { channel_data?: string };
+        const authData = (await response.json()) as {
+            auth: string;
+            channel_data?: string;
+        };
 
         callback(null, {
-            auth: '',
+            auth: authData.auth,
             ...(authData.channel_data
                 ? { channel_data: authData.channel_data }
                 : {}),
