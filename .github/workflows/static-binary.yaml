@@ -27,7 +27,6 @@ jobs:
         runs-on: ${{ matrix.runner }}
         env:
             BINARY_NAME: pogo-showcase-linux-${{ matrix.binary_arch }}
-            IMAGE_NAME: pogo-showcase-static:${{ matrix.binary_arch }}
 
         steps:
             - name: Checkout Pogo Showcase
@@ -39,30 +38,23 @@ jobs:
             - name: Set up Docker Buildx
               uses: docker/setup-buildx-action@v3
 
-            - name: Build image with embedded app
+            - name: Build binary artifact
               uses: docker/build-push-action@v7
               with:
                   context: .
                   file: static-build.Dockerfile
                   platforms: ${{ matrix.platform }}
-                  load: true
-                  tags: ${{ env.IMAGE_NAME }}
+                  target: binary-export
+                  outputs: type=local,dest=dist
                   build-args: |
                       STATIC_BUILDER_PLATFORM=${{ matrix.platform }}
                       FRANKENPHP_VERSION=${{ env.FRANKENPHP_VERSION }}
                   secrets: |
                       github-token=${{ secrets.GITHUB_TOKEN }}
 
-            - name: Extract binary
-              run: |
-                  mkdir -p dist
-                  container="$(docker create "${IMAGE_NAME}")"
-                  trap 'docker rm -f "${container}" >/dev/null' EXIT
-                  docker cp "${container}:/go/src/app/dist/${BINARY_NAME}" "dist/${BINARY_NAME}"
-                  chmod +x "dist/${BINARY_NAME}"
-
             - name: Verify binary
               run: |
+                  chmod +x "dist/${BINARY_NAME}"
                   file "dist/${BINARY_NAME}"
                   "dist/${BINARY_NAME}" version
                   sha256sum "dist/${BINARY_NAME}" > "dist/${BINARY_NAME}.sha256"

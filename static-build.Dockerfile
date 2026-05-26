@@ -48,7 +48,7 @@ RUN npm ci --legacy-peer-deps \
 	&& POGO_SKIP_WAYFINDER_VITE=1 npm run build \
 	&& rm -rf node_modules public/hot
 
-FROM --platform=${STATIC_BUILDER_PLATFORM} dunglas/frankenphp:static-builder-gnu
+FROM --platform=${STATIC_BUILDER_PLATFORM} dunglas/frankenphp:static-builder-gnu AS static-builder
 
 ARG CI=true
 ARG FRANKENPHP_VERSION=1.12.3
@@ -76,4 +76,10 @@ RUN --mount=type=secret,id=github-token,required=false \
 	fi \
 	&& EMBED=dist/app/ ./build-static.sh \
 	&& arch="$(uname -m)" \
-	&& cp "dist/frankenphp-linux-${arch}" "dist/pogo-showcase-linux-${arch}"
+	&& cp "dist/frankenphp-linux-${arch}" "dist/pogo-showcase-linux-${arch}" \
+	&& mkdir -p /out \
+	&& cp "dist/pogo-showcase-linux-${arch}" "/out/pogo-showcase-linux-${arch}"
+
+FROM scratch AS binary-export
+
+COPY --from=static-builder /out/ /
