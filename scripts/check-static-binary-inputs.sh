@@ -8,6 +8,8 @@ required_files=(
     Caddyfile
     composer.json
     composer.lock
+    packages/pogo/composer.json
+    packages/pogo/src/JobInterface.php
     public/index.php
     public/frankenphp-worker.php
     public/pogo-worker.php
@@ -103,6 +105,38 @@ fi
 
 if rg -n 'Env::get|Request::server' public/*worker.php >&2; then
     printf 'Worker scripts must not call Laravel Env/Request before autoload. Use $_SERVER/$_ENV/getenv instead.\n' >&2
+    failed=1
+fi
+
+if ! php <<'PHP'
+<?php
+$lock = json_decode(file_get_contents('composer.lock'), true, 512, JSON_THROW_ON_ERROR);
+$package = null;
+foreach ($lock['packages'] ?? [] as $candidate) {
+    if (($candidate['name'] ?? null) === 'pogo/async') {
+        $package = $candidate;
+        break;
+    }
+}
+
+if (! $package) {
+    fwrite(STDERR, "composer.lock does not contain pogo/async.\n");
+    exit(1);
+}
+
+$dist = $package['dist'] ?? [];
+$options = $package['transport-options'] ?? [];
+if (($dist['type'] ?? null) !== 'path' || ($dist['url'] ?? null) !== 'packages/pogo') {
+    fwrite(STDERR, "composer.lock must install pogo/async from packages/pogo for the static showcase binary.\n");
+    exit(1);
+}
+
+if (($options['symlink'] ?? null) !== false) {
+    fwrite(STDERR, "composer.lock must mirror pogo/async instead of symlinking it for the static showcase binary.\n");
+    exit(1);
+}
+PHP
+then
     failed=1
 fi
 

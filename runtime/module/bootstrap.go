@@ -127,6 +127,7 @@ func (b *Bootstrap) prepareEnvironment() (string, error) {
 		"SESSION_ENCRYPT":      "true",
 		"LOG_CHANNEL":          "single",
 		"LOG_LEVEL":            "info",
+		"PHP_BINARY":           "/proc/self/exe",
 		"LARAVEL_STORAGE_PATH": filepath.Join(dataDir, "storage"),
 		"POGO_SHOWCASE_DATA":   dataDir,
 	}

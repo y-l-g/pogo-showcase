@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6ce842bc7ef7cb2faad035dd477cfb14",
+    "content-hash": "7e9175a646b78fb5c4f11643372f0a8f",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -4019,7 +4019,7 @@
             "dist": {
                 "type": "path",
                 "url": "packages/pogo",
-                "reference": "826f2431064c37a6f1992b8650aed80859bb5e07"
+                "reference": "ae21e7ab7c98eaff7eb7b57a663c9cbb314677aa"
             },
             "require": {
                 "ext-json": "*",
@@ -4036,7 +4036,7 @@
             ],
             "description": "Request-scoped parallel PHP jobs for FrankenPHP.",
             "transport-options": {
-                "symlink": true,
+                "symlink": false,
                 "relative": true
             }
         },

@@ -4,6 +4,7 @@ import { createInertiaApp } from '@inertiajs/vue3';
 import { configureEcho } from '@laravel/echo-vue';
 import ui from '@nuxt/ui/vue-plugin';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
+import type { ChannelAuthorizationHandler } from 'pusher-js';
 import Pusher from 'pusher-js';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
@@ -22,6 +23,48 @@ const pogoAuthHeaders = {
     'X-Requested-With': 'XMLHttpRequest',
     ...(csrfToken ? { 'X-CSRF-TOKEN': csrfToken } : {}),
 };
+const pogoChannelAuthorization: ChannelAuthorizationHandler = async (
+    { socketId, channelName },
+    callback,
+) => {
+    try {
+        const response = await fetch('/pogo/auth', {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+                ...pogoAuthHeaders,
+                Accept: 'application/json',
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                socket_id: socketId,
+                channel_name: channelName,
+            }),
+        });
+
+        if (!response.ok) {
+            throw new Error(
+                `Pogo channel authorization failed (${response.status})`,
+            );
+        }
+
+        const authData = (await response.json()) as { channel_data?: string };
+
+        callback(null, {
+            auth: '',
+            ...(authData.channel_data
+                ? { channel_data: authData.channel_data }
+                : {}),
+        });
+    } catch (error) {
+        callback(
+            error instanceof Error
+                ? error
+                : new Error('Pogo channel authorization failed'),
+            null,
+        );
+    }
+};
 const pogoClient = new Pusher(pogoAppId, {
     cluster: 'mt1',
     wsHost: pogoHost,
@@ -31,9 +74,7 @@ const pogoClient = new Pusher(pogoAppId, {
     enableStats: false,
     enabledTransports: pogoTransports,
     channelAuthorization: {
-        endpoint: '/pogo/auth',
-        transport: 'ajax',
-        headers: pogoAuthHeaders,
+        customHandler: pogoChannelAuthorization,
     },
     userAuthentication: {
         endpoint: '/pogo/user-auth',

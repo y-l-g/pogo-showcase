@@ -29,6 +29,43 @@ it('renders the queue showcase page', function (): void {
         );
 });
 
+it('normalizes native queue status for the queue showcase page', function (): void {
+    $GLOBALS['pogo_queue_status_payload'] = [
+        'ready' => true,
+        'queues' => [[
+            'queue' => 'default',
+            'ready' => true,
+            'pending' => 2,
+            'delayed' => 1,
+            'reserved' => 1,
+            'enqueued' => 12,
+            'reserved_total' => 9,
+            'dropped_full' => 1,
+            'dropped_payload_too_large' => 2,
+            'dropped_shutdown' => 3,
+            'backend_errors' => 4,
+            'max_payload_bytes' => 1024,
+        ]],
+    ];
+
+    $user = User::factory()->create();
+
+    actingAs($user)
+        ->get(route('showcase.queue'))
+        ->assertInertia(
+            fn (Assert $page): Assert => $page
+                ->where('queueAvailable', true)
+                ->where('queueStats.enqueued', 12)
+                ->where('queueStats.dispatched', 9)
+                ->where('queueStats.current_depth', 4)
+                ->where('queueStats.dropped_full', 1)
+                ->where('queueStats.dropped_payload_too_large', 2)
+                ->where('queueStats.dropped_shutdown', 3)
+                ->where('queueStats.send_errors', 4)
+                ->where('queueStats.max_message_bytes', 1024)
+        );
+});
+
 it('creates a queue demo batch and dispatches jobs', function (): void {
     Queue::fake();
 
@@ -105,3 +142,24 @@ it('marks queue demo jobs as completed', function (): void {
         ->and($current['jobs'][0]['worker_lane'])->toBeInt()
         ->and($current['jobs'][0]['result'])->toBe('Demo job finished in 0.0s');
 });
+
+afterEach(function (): void {
+    unset($GLOBALS['pogo_queue_status_payload']);
+});
+
+if (! function_exists('pogo_queue')) {
+    function pogo_queue(string $data): int
+    {
+        return 1;
+    }
+}
+
+if (! function_exists('pogo_queue_status')) {
+    function pogo_queue_status(?string $queue = null): string
+    {
+        return json_encode($GLOBALS['pogo_queue_status_payload'] ?? [
+            'ready' => false,
+            'queues' => [],
+        ], JSON_THROW_ON_ERROR);
+    }
+}
