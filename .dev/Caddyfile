@@ -28,10 +28,19 @@
         timeout 2m
     }
     pogo_queue {
+        backend memory {
+            max_messages 10000
+            max_total_bytes 67108864
+        }
+
         worker public/queue-worker.php
-        name m#Queue
-        size 10000       # Max jobs in memory. If full, dispatch throws QueueFullException.
-        num_threads 32   # Number of concurrent workers (defaults to CPU count).
+        queues default
+        concurrency 32
+        worker_threads 32
+        max_payload_bytes 1048576
+        visibility_timeout 90s
+        shutdown_timeout 30s
+        max_attempts 3
     }
 }
 
