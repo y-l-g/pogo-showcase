@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-ARG STATIC_BUILDER_PLATFORM=linux/amd64
+ARG STATIC_BUILDER_PLATFORM=linux/arm64
 
 FROM serversideup/php:8.5.6-frankenphp-trixie AS app-builder
 

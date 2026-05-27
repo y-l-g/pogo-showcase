@@ -18,9 +18,10 @@ jobs:
             fail-fast: false
             matrix:
                 include:
-                    - platform: linux/amd64
-                      binary_arch: x86_64
-                      runner: ubuntu-latest
+                    # Re-enable when x86_64 binaries are needed again.
+                    # - platform: linux/amd64
+                    #   binary_arch: x86_64
+                    #   runner: ubuntu-latest
                     - platform: linux/arm64
                       binary_arch: aarch64
                       runner: ubuntu-24.04-arm
