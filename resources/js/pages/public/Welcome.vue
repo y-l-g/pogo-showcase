@@ -24,8 +24,8 @@ useSeoMeta({
             <UPageHero
                 :ui="{
                     container:
-                        'items-center justify-center py-14 sm:py-16 lg:py-20',
-                    title: 'mx-auto max-w-4xl',
+                        'min-h-[calc(100dvh-var(--ui-header-height))] items-center justify-center py-12 sm:py-14 lg:py-16',
+                    title: 'mx-auto max-w-4xl text-4xl sm:text-6xl lg:text-7xl',
                     description: 'mx-auto max-w-2xl',
                 }"
                 title="Pogo extensions for FrankenPHP"
@@ -53,13 +53,14 @@ useSeoMeta({
                             trailing
                         />
                         <UButton
-                            to="https://github.com/y-l-g/websocket"
+                            to="https://doc.pogo.y-l.fr"
                             target="_blank"
                             size="xl"
-                            label="GitHub"
+                            label="Docs"
                             color="neutral"
-                            variant="ghost"
-                            icon="i-lucide-github"
+                            variant="subtle"
+                            icon="i-lucide-book-open"
+                            trailing-icon="i-lucide-external-link"
                         />
                     </motion.div>
                 </template>

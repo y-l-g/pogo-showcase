@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CodeBlock from '@/components/public/CodeBlock.vue';
 import { useEchoPublic } from '@laravel/echo-vue';
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 
@@ -79,7 +80,7 @@ const queueTimers: Array<ReturnType<typeof setTimeout>> = [];
 
 const snippets = {
     chat: `// Vue
-useEchoPublic('landing.chat', '.message.sent', addMessage)
+useEchoPublic('landing.chat', '.message.sent', addChatMessage)
 await fetch('/examples/chat/message', { method: 'POST', body })
 
 // Laravel
@@ -99,7 +100,7 @@ foreach ($tasks as $task) {
 
 $results = array_map(fn ($h) => $pogo->await($h), $handles);`,
     queue: `// Laravel
-dispatch(new SendReceipt())
+dispatch(new QueueDemoJob($batchId, $jobId, 800, 'Send receipt'))
   ->onConnection('pogo')
   ->onQueue('default');
 
@@ -309,20 +310,22 @@ onBeforeUnmount(() => {
 <template>
     <UPageSection
         title="Working examples"
-        description="Tiny demos you can run here. Each one includes the code that matters."
+        description="Run the demo, then read the tiny code path beside it."
         :ui="{
-            container: 'max-w-7xl',
+            container: 'max-w-6xl py-16 sm:py-20',
             title: 'text-center',
             description: 'mx-auto max-w-2xl text-center',
         }"
     >
-        <div class="grid gap-6 lg:gap-8">
-            <section class="rounded-lg border border-default bg-elevated/30">
-                <div class="grid gap-0 lg:grid-cols-[1fr_0.9fr]">
-                    <div class="space-y-5 p-5 sm:p-6">
-                        <div class="space-y-2">
+        <div class="border-y border-default">
+            <section class="border-b border-default py-8 sm:py-10">
+                <div
+                    class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
+                >
+                    <div class="space-y-5">
+                        <div class="space-y-3">
                             <div
-                                class="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                                class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
                             >
                                 <UIcon
                                     name="i-lucide-messages-square"
@@ -330,7 +333,7 @@ onBeforeUnmount(() => {
                                 />
                             </div>
                             <h2 class="text-2xl font-semibold">Real chat</h2>
-                            <p class="text-muted">
+                            <p class="max-w-2xl text-muted">
                                 Send a public message. With the websocket server
                                 running, every connected browser receives it.
                             </p>
@@ -382,27 +385,27 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div
-                        class="border-t border-default p-5 sm:p-6 lg:border-t-0 lg:border-l"
-                    >
-                        <pre
-                            class="h-full rounded-lg bg-gray-950 p-4 text-xs leading-relaxed break-words whitespace-pre-wrap text-gray-100"
-                        ><code>{{ snippets.chat }}</code></pre>
-                    </div>
+                    <CodeBlock
+                        :code="snippets.chat"
+                        filename="Chat.vue + LandingChatMessage.php"
+                        language="vue"
+                    />
                 </div>
             </section>
 
-            <section class="rounded-lg border border-default bg-elevated/30">
-                <div class="grid gap-0 lg:grid-cols-[1fr_0.9fr]">
-                    <div class="space-y-5 p-5 sm:p-6">
-                        <div class="space-y-2">
+            <section class="border-b border-default py-8 sm:py-10">
+                <div
+                    class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
+                >
+                    <div class="space-y-5">
+                        <div class="space-y-3">
                             <div
-                                class="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                                class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
                             >
                                 <UIcon name="i-lucide-clock" class="size-5" />
                             </div>
                             <h2 class="text-2xl font-semibold">Pulse</h2>
-                            <p class="text-muted">
+                            <p class="max-w-2xl text-muted">
                                 A tiny poller hits Laravel every second and
                                 updates the counter from the response.
                             </p>
@@ -451,22 +454,22 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div
-                        class="border-t border-default p-5 sm:p-6 lg:border-t-0 lg:border-l"
-                    >
-                        <pre
-                            class="h-full rounded-lg bg-gray-950 p-4 text-xs leading-relaxed break-words whitespace-pre-wrap text-gray-100"
-                        ><code>{{ snippets.pulse }}</code></pre>
-                    </div>
+                    <CodeBlock
+                        :code="snippets.pulse"
+                        filename="Pulse.vue + LandingPulseController.php"
+                        language="vue"
+                    />
                 </div>
             </section>
 
-            <section class="rounded-lg border border-default bg-elevated/30">
-                <div class="grid gap-0 lg:grid-cols-[1fr_0.9fr]">
-                    <div class="space-y-5 p-5 sm:p-6">
-                        <div class="space-y-2">
+            <section class="border-b border-default py-8 sm:py-10">
+                <div
+                    class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
+                >
+                    <div class="space-y-5">
+                        <div class="space-y-3">
                             <div
-                                class="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                                class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
                             >
                                 <UIcon
                                     name="i-lucide-workflow"
@@ -476,7 +479,7 @@ onBeforeUnmount(() => {
                             <h2 class="text-2xl font-semibold">
                                 Parallel work
                             </h2>
-                            <p class="text-muted">
+                            <p class="max-w-2xl text-muted">
                                 Run three independent backend tasks. Pogo uses
                                 workers when available, otherwise PHP runs the
                                 same tasks locally.
@@ -539,22 +542,21 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div
-                        class="border-t border-default p-5 sm:p-6 lg:border-t-0 lg:border-l"
-                    >
-                        <pre
-                            class="h-full rounded-lg bg-gray-950 p-4 text-xs leading-relaxed break-words whitespace-pre-wrap text-gray-100"
-                        ><code>{{ snippets.parallel }}</code></pre>
-                    </div>
+                    <CodeBlock
+                        :code="snippets.parallel"
+                        filename="LandingParallelController.php"
+                    />
                 </div>
             </section>
 
-            <section class="rounded-lg border border-default bg-elevated/30">
-                <div class="grid gap-0 lg:grid-cols-[1fr_0.9fr]">
-                    <div class="space-y-5 p-5 sm:p-6">
-                        <div class="space-y-2">
+            <section class="py-8 sm:py-10">
+                <div
+                    class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
+                >
+                    <div class="space-y-5">
+                        <div class="space-y-3">
                             <div
-                                class="flex size-11 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                                class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
                             >
                                 <UIcon
                                     name="i-lucide-list-todo"
@@ -562,7 +564,7 @@ onBeforeUnmount(() => {
                                 />
                             </div>
                             <h2 class="text-2xl font-semibold">Queue board</h2>
-                            <p class="text-muted">
+                            <p class="max-w-2xl text-muted">
                                 Run the tiny board and watch jobs move from
                                 queued to running to completed.
                             </p>
@@ -628,13 +630,10 @@ onBeforeUnmount(() => {
                         </div>
                     </div>
 
-                    <div
-                        class="border-t border-default p-5 sm:p-6 lg:border-t-0 lg:border-l"
-                    >
-                        <pre
-                            class="h-full rounded-lg bg-gray-950 p-4 text-xs leading-relaxed break-words whitespace-pre-wrap text-gray-100"
-                        ><code>{{ snippets.queue }}</code></pre>
-                    </div>
+                    <CodeBlock
+                        :code="snippets.queue"
+                        filename="RunQueueDemoController.php"
+                    />
                 </div>
             </section>
         </div>
