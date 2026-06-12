@@ -317,8 +317,8 @@ onBeforeUnmount(() => {
             description: 'mx-auto max-w-2xl text-center',
         }"
     >
-        <div class="border-y border-default">
-            <section class="border-b border-default py-8 sm:py-10">
+        <div class="grid gap-12 sm:gap-16">
+            <section>
                 <div
                     class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
                 >
@@ -388,12 +388,12 @@ onBeforeUnmount(() => {
                     <CodeBlock
                         :code="snippets.chat"
                         filename="Chat.vue + LandingChatMessage.php"
-                        language="vue"
+                        language="javascript"
                     />
                 </div>
             </section>
 
-            <section class="border-b border-default py-8 sm:py-10">
+            <section>
                 <div
                     class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
                 >
@@ -457,12 +457,12 @@ onBeforeUnmount(() => {
                     <CodeBlock
                         :code="snippets.pulse"
                         filename="Pulse.vue + LandingPulseController.php"
-                        language="vue"
+                        language="javascript"
                     />
                 </div>
             </section>
 
-            <section class="border-b border-default py-8 sm:py-10">
+            <section>
                 <div
                     class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
                 >
@@ -549,7 +549,7 @@ onBeforeUnmount(() => {
                 </div>
             </section>
 
-            <section class="py-8 sm:py-10">
+            <section>
                 <div
                     class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
                 >
