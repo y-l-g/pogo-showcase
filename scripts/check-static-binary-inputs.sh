@@ -37,17 +37,17 @@ for file in "${required_files[@]}"; do
     fi
 done
 
-if ! rg -q -- '--with github\.com/y-l-g/pogo/module@main' static-build.Dockerfile; then
+if ! grep -Fq -- '--with github.com/y-l-g/pogo/module@main' static-build.Dockerfile; then
     printf 'static-build.Dockerfile must resolve the async module from GitHub with github.com/y-l-g/pogo/module@main.\n' >&2
     failed=1
 fi
 
-if rg -n 'github\.com/y-l-g/pogo/module=|async-module' static-build.Dockerfile .github/workflows/static-binary.yaml docs/single-binary.md >&2; then
+if grep -nE 'github[.]com/y-l-g/pogo/module=|async-module' static-build.Dockerfile .github/workflows/static-binary.yaml docs/single-binary.md >&2; then
     printf 'Static binary builds must not use a local async module path or BuildKit context.\n' >&2
     failed=1
 fi
 
-if rg -n '(^|[[:space:]])(file|worker|auth_script)[[:space:]]+public/|root[[:space:]]+\*[[:space:]]+public($|[[:space:]])|dir[[:space:]]+\.$' Caddyfile >&2; then
+if grep -nE '(^|[[:space:]])(file|worker|auth_script)[[:space:]]+public/|root[[:space:]]+[*][[:space:]]+public($|[[:space:]])|dir[[:space:]]+[.]$' Caddyfile >&2; then
     printf 'Caddyfile contains cwd-sensitive static binary paths. Use {$POGO_SHOWCASE_APP_PATH:.}/... instead.\n' >&2
     failed=1
 fi
@@ -111,7 +111,7 @@ if ! awk '
     failed=1
 fi
 
-if rg -n 'Env::get|Request::server' public/*worker.php >&2; then
+if grep -nE 'Env::get|Request::server' public/*worker.php >&2; then
     printf 'Worker scripts must not call Laravel Env/Request before autoload. Use $_SERVER/$_ENV/getenv instead.\n' >&2
     failed=1
 fi
