@@ -2,12 +2,16 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\Showcase\CreateUploadIntentController;
 use App\Http\Controllers\Showcase\ResetQueueDemoController;
 use App\Http\Controllers\Showcase\RunPogoDemoController;
 use App\Http\Controllers\Showcase\RunQueueDemoController;
+use App\Http\Controllers\Showcase\RunRawUploadController;
 use App\Http\Controllers\Showcase\SendMessageController;
 use App\Http\Controllers\Showcase\ShowPogoController;
 use App\Http\Controllers\Showcase\ShowQueueController;
+use App\Http\Controllers\Showcase\ShowUploadController;
+use App\Http\Controllers\Showcase\ShowUploadProgressController;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 
@@ -21,6 +25,13 @@ Route::middleware(['auth', 'verified', 'nossr'])->group(function (): void {
     Route::get('/queue', ShowQueueController::class)->name('showcase.queue');
     Route::post('/queue/run', RunQueueDemoController::class)->name('showcase.queue.run');
     Route::post('/queue/reset', ResetQueueDemoController::class)->name('showcase.queue.reset');
+
+    Route::get('/upload', ShowUploadController::class)->name('showcase.upload');
+    Route::post('/upload/raw', RunRawUploadController::class)->name('showcase.upload.raw');
+    Route::post('/upload/pogo/intent', CreateUploadIntentController::class)->name('showcase.upload.intent');
+    Route::get('/upload/pogo/{uploadId}', ShowUploadProgressController::class)
+        ->where('uploadId', '[A-Za-z0-9_]+')
+        ->name('showcase.upload.progress');
 });
 
 Route::get('/showcase', function () {
