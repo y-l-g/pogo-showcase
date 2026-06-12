@@ -168,9 +168,7 @@ watch(
                     >
                         <UFormField
                             name="code"
-                            :error="
-                                errors?.confirmTwoFactorAuthentication?.code
-                            "
+                            :error="errors?.code"
                             class="flex justify-center"
                             required
                         >

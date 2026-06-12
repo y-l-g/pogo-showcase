@@ -64,7 +64,10 @@ const submit = (mode: Mode) => {
     });
 };
 
-const format = (value?: number | string | null, unit?: string | null) =>
+const format = (
+    value?: number | string | null,
+    unit?: number | string | null,
+) =>
     value === null || value === undefined || value === ''
         ? 'n/a'
         : `${value}${unit ?? ''}`;
