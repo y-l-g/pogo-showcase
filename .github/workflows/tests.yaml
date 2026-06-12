@@ -9,7 +9,10 @@ jobs:
         runs-on: ubuntu-latest
         if: ${{ github.event_name != 'push' || github.event.head_commit == null || !contains(github.event.head_commit.message, 'Merge pull request') || !contains(github.event.head_commit.message, 'renovate/') }}
         env:
-            WS_APP_SECRET: testing-websocket-secret
+            BROADCAST_CONNECTION: reverb
+            REVERB_APP_ID: pogo-app
+            REVERB_APP_KEY: pogo-app
+            REVERB_APP_SECRET: testing-websocket-secret
 
         steps:
             - name: Checkout

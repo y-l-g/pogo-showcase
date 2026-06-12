@@ -19,6 +19,12 @@ func TestPrepareEnvironmentLoadsAndPreservesRuntimeEnv(t *testing.T) {
 		"QUEUE_CONNECTION",
 		"POGO_QUEUE",
 		"BROADCAST_CONNECTION",
+		"REVERB_APP_ID",
+		"REVERB_APP_KEY",
+		"REVERB_APP_SECRET",
+		"REVERB_HOST",
+		"REVERB_PORT",
+		"REVERB_SCHEME",
 		"WS_APP_ID",
 		"WS_APP_SECRET",
 		"POGO_WEBHOOK_SECRET",
@@ -76,6 +82,7 @@ func TestPrepareEnvironmentLoadsAndPreservesRuntimeEnv(t *testing.T) {
 	text := string(body)
 	for _, want := range []string{
 		"APP_KEY=base64:test-app-key\n",
+		"REVERB_APP_SECRET=test-ws-secret\n",
 		"WS_APP_SECRET=test-ws-secret\n",
 		"POGO_WEBHOOK_SECRET=test-webhook-secret\n",
 		"MAIL_MAILER=smtp\n",
@@ -108,6 +115,12 @@ func TestPrepareEnvironmentGeneratesSecretsWithoutDroppingOperatorValues(t *test
 		"QUEUE_CONNECTION",
 		"POGO_QUEUE",
 		"BROADCAST_CONNECTION",
+		"REVERB_APP_ID",
+		"REVERB_APP_KEY",
+		"REVERB_APP_SECRET",
+		"REVERB_HOST",
+		"REVERB_PORT",
+		"REVERB_SCHEME",
 		"WS_APP_ID",
 		"WS_APP_SECRET",
 		"POGO_WEBHOOK_SECRET",
@@ -144,8 +157,8 @@ func TestPrepareEnvironmentGeneratesSecretsWithoutDroppingOperatorValues(t *test
 	if got := values["APP_KEY"]; !strings.HasPrefix(got, "base64:") {
 		t.Fatalf("APP_KEY = %q, want generated base64 key", got)
 	}
-	if values["WS_APP_SECRET"] == "" {
-		t.Fatal("WS_APP_SECRET was not generated")
+	if values["REVERB_APP_SECRET"] == "" {
+		t.Fatal("REVERB_APP_SECRET was not generated")
 	}
 	if values["POGO_WEBHOOK_SECRET"] == "" {
 		t.Fatal("POGO_WEBHOOK_SECRET was not generated")

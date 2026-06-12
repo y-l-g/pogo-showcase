@@ -11,10 +11,10 @@ uses(RefreshDatabase::class);
 
 it('authorizes private chat channels with a socket-aware pusher signature', function (): void {
     $user = User::factory()->create();
-    $appId = (string) config('broadcasting.connections.pogo.app_id');
-    $secret = (string) config('broadcasting.connections.pogo.secret');
+    $appKey = (string) config('broadcasting.connections.reverb.key');
+    $secret = (string) config('broadcasting.connections.reverb.secret');
 
-    $response = actingAs($user)->postJson('/pogo/auth', [
+    $response = actingAs($user)->postJson('/broadcasting/auth', [
         'socket_id' => '1.1',
         'channel_name' => 'private-chat.private',
     ]);
@@ -22,7 +22,7 @@ it('authorizes private chat channels with a socket-aware pusher signature', func
     $response
         ->assertOk()
         ->assertJson([
-            'auth' => $appId.':'.hash_hmac('sha256', '1.1:private-chat.private', $secret),
+            'auth' => $appKey.':'.hash_hmac('sha256', '1.1:private-chat.private', $secret),
         ]);
 });
 
@@ -30,10 +30,10 @@ it('authorizes presence chat channels with channel data in the pusher signature'
     $user = User::factory()->create([
         'name' => 'Presence User',
     ]);
-    $appId = (string) config('broadcasting.connections.pogo.app_id');
-    $secret = (string) config('broadcasting.connections.pogo.secret');
+    $appKey = (string) config('broadcasting.connections.reverb.key');
+    $secret = (string) config('broadcasting.connections.reverb.secret');
 
-    $response = actingAs($user)->postJson('/pogo/auth', [
+    $response = actingAs($user)->postJson('/broadcasting/auth', [
         'socket_id' => '1.1',
         'channel_name' => 'presence-chat.presence',
     ]);
@@ -52,13 +52,13 @@ it('authorizes presence chat channels with channel data in the pusher signature'
     $response
         ->assertOk()
         ->assertJson([
-            'auth' => $appId.':'.hash_hmac('sha256', '1.1:presence-chat.presence:'.$channelData, $secret),
+            'auth' => $appKey.':'.hash_hmac('sha256', '1.1:presence-chat.presence:'.$channelData, $secret),
             'channel_data' => $channelData,
         ]);
 });
 
 it('denies unauthenticated private chat channel authorization', function (): void {
-    $response = $this->postJson('/pogo/auth', [
+    $response = $this->postJson('/broadcasting/auth', [
         'socket_id' => '1.1',
         'channel_name' => 'private-chat.private',
     ]);

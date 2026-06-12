@@ -31,7 +31,7 @@ instructions.
 
 The binary creates a `data/` directory next to itself on first start. That
 directory stores the SQLite database, Laravel storage, logs, generated app key,
-and WebSocket secrets.
+and Reverb/WebSocket secrets.
 
 ## Local development
 

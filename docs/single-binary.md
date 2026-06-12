@@ -85,7 +85,7 @@ SERVER_NAME=pogo.y-l.fr ./pogo-showcase php-server
 
 The binary creates `./data` next to itself on first start. That directory
 contains the SQLite database, Laravel storage, logs, generated `APP_KEY`, and
-websocket secrets. Keep `./data/runtime.env` when replacing the binary so
+Reverb/WebSocket secrets. Keep `./data/runtime.env` when replacing the binary so
 sessions and websocket authentication remain valid.
 
 ## Runtime secrets

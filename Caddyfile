@@ -68,11 +68,10 @@
 		}
 	}
 
-	route /app/* {
+	@websocket path /app/* /apps/* /up /pogo/health
+	route @websocket {
 		pogo_websocket {
-			app_id pogo-app
-			auth_path /pogo/auth
-			auth_script {$POGO_SHOWCASE_APP_PATH:.}/public/websocket-worker.php
+			allowed_origins {$POGO_WS_ALLOWED_ORIGINS:*}
 
 			handshake_rate {$POGO_WS_HANDSHAKE_RATE:100}
 			handshake_burst {$POGO_WS_HANDSHAKE_BURST:50}
@@ -82,7 +81,6 @@
 			broker_queue_size {$POGO_WS_BROKER_QUEUE_SIZE:1024}
 			shard_queue_size {$POGO_WS_SHARD_QUEUE_SIZE:1024}
 
-			num_workers {$POGO_WS_AUTH_WORKERS:2}
 			num_shards {$POGO_WS_SHARDS:8}
 
 			ping_period 54s

@@ -13,7 +13,6 @@ required_files=(
     public/pogo-worker.php
     public/queue-worker.php
     public/scheduler-worker.php
-    public/websocket-worker.php
 )
 
 failed=0

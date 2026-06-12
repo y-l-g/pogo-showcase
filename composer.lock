@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "9cca293a43003d3cd44a90824efe0423",
+    "content-hash": "bcf06fa0bbac10ef1ff5d98cbb1ea0a7",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3974,17 +3974,16 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/y-l-g/websocket.git",
-                "reference": "914172ed0fbeffec62baadd174c1b74a279350b3"
+                "reference": "41f3370274209701e8852ad8a2a0c35b434a977b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/y-l-g/websocket/zipball/914172ed0fbeffec62baadd174c1b74a279350b3",
-                "reference": "914172ed0fbeffec62baadd174c1b74a279350b3",
+                "url": "https://api.github.com/repos/y-l-g/websocket/zipball/41f3370274209701e8852ad8a2a0c35b434a977b",
+                "reference": "41f3370274209701e8852ad8a2a0c35b434a977b",
                 "shasum": ""
             },
             "require": {
                 "laravel/framework": "^11.0 || ^12.0 || ^13.0",
-                "laravel/octane": "^2.0",
                 "php": "^8.2"
             },
             "require-dev": {
@@ -4016,7 +4015,7 @@
                 "issues": "https://github.com/y-l-g/websocket/issues",
                 "source": "https://github.com/y-l-g/websocket/tree/main"
             },
-            "time": "2026-05-26T14:40:34+00:00"
+            "time": "2026-06-12T16:32:07+00:00"
         },
         {
             "name": "pragmarx/google2fa",
@@ -4560,6 +4559,66 @@
                 "source": "https://github.com/bobthecow/psysh/tree/v0.12.23"
             },
             "time": "2026-05-23T13:41:31+00:00"
+        },
+        {
+            "name": "pusher/pusher-php-server",
+            "version": "7.2.8",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/pusher/pusher-http-php.git",
+                "reference": "4aa139ed2a2a805cd265449b691198beee1309d2"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/pusher/pusher-http-php/zipball/4aa139ed2a2a805cd265449b691198beee1309d2",
+                "reference": "4aa139ed2a2a805cd265449b691198beee1309d2",
+                "shasum": ""
+            },
+            "require": {
+                "ext-curl": "*",
+                "ext-json": "*",
+                "guzzlehttp/guzzle": "^7.2",
+                "php": "^7.3|^8.0",
+                "psr/log": "^1.0|^2.0|^3.0"
+            },
+            "require-dev": {
+                "overtrue/phplint": "^2.3",
+                "phpunit/phpunit": "^9.3"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "5.0-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Pusher\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Library for interacting with the Pusher REST API",
+            "keywords": [
+                "events",
+                "messaging",
+                "php-pusher-server",
+                "publish",
+                "push",
+                "pusher",
+                "real time",
+                "real-time",
+                "realtime",
+                "rest",
+                "trigger"
+            ],
+            "support": {
+                "issues": "https://github.com/pusher/pusher-http-php/issues",
+                "source": "https://github.com/pusher/pusher-http-php/tree/7.2.8"
+            },
+            "time": "2026-05-18T13:11:36+00:00"
         },
         {
             "name": "ralouphie/getallheaders",
