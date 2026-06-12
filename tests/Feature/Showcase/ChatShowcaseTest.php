@@ -11,6 +11,8 @@ uses(RefreshDatabase::class);
 
 it('authorizes private chat channels with a socket-aware pusher signature', function (): void {
     $user = User::factory()->create();
+    $appId = (string) config('broadcasting.connections.pogo.app_id');
+    $secret = (string) config('broadcasting.connections.pogo.secret');
 
     $response = actingAs($user)->postJson('/pogo/auth', [
         'socket_id' => '1.1',
@@ -20,7 +22,7 @@ it('authorizes private chat channels with a socket-aware pusher signature', func
     $response
         ->assertOk()
         ->assertJson([
-            'auth' => 'pogo-app:'.hash_hmac('sha256', '1.1:private-chat.private', 'super-secret-key'),
+            'auth' => $appId.':'.hash_hmac('sha256', '1.1:private-chat.private', $secret),
         ]);
 });
 
@@ -28,6 +30,8 @@ it('authorizes presence chat channels with channel data in the pusher signature'
     $user = User::factory()->create([
         'name' => 'Presence User',
     ]);
+    $appId = (string) config('broadcasting.connections.pogo.app_id');
+    $secret = (string) config('broadcasting.connections.pogo.secret');
 
     $response = actingAs($user)->postJson('/pogo/auth', [
         'socket_id' => '1.1',
@@ -48,7 +52,7 @@ it('authorizes presence chat channels with channel data in the pusher signature'
     $response
         ->assertOk()
         ->assertJson([
-            'auth' => 'pogo-app:'.hash_hmac('sha256', '1.1:presence-chat.presence:'.$channelData, 'super-secret-key'),
+            'auth' => $appId.':'.hash_hmac('sha256', '1.1:presence-chat.presence:'.$channelData, $secret),
             'channel_data' => $channelData,
         ]);
 });
