@@ -28,6 +28,8 @@ func TestPrepareEnvironmentLoadsAndPreservesRuntimeEnv(t *testing.T) {
 		"WS_APP_ID",
 		"WS_APP_SECRET",
 		"POGO_WEBHOOK_SECRET",
+		"POGO_UPLOAD_SECRET",
+		"POGO_UPLOAD_ROOT",
 		"CACHE_STORE",
 		"SESSION_DRIVER",
 		"SESSION_ENCRYPT",
@@ -47,6 +49,7 @@ func TestPrepareEnvironmentLoadsAndPreservesRuntimeEnv(t *testing.T) {
 		"APP_KEY=base64:test-app-key",
 		"WS_APP_SECRET=test-ws-secret",
 		"POGO_WEBHOOK_SECRET=test-webhook-secret",
+		"POGO_UPLOAD_SECRET=test-upload-secret",
 		"MAIL_MAILER=smtp",
 		"MAIL_PASSWORD=from-file",
 		"MAIL_FROM_NAME=\"Pogo Showcase\"",
@@ -85,6 +88,7 @@ func TestPrepareEnvironmentLoadsAndPreservesRuntimeEnv(t *testing.T) {
 		"REVERB_APP_SECRET=test-ws-secret\n",
 		"WS_APP_SECRET=test-ws-secret\n",
 		"POGO_WEBHOOK_SECRET=test-webhook-secret\n",
+		"POGO_UPLOAD_SECRET=test-upload-secret\n",
 		"MAIL_MAILER=smtp\n",
 		"MAIL_PASSWORD=from-file\n",
 		"MAIL_FROM_NAME=Pogo Showcase\n",
@@ -124,6 +128,8 @@ func TestPrepareEnvironmentGeneratesSecretsWithoutDroppingOperatorValues(t *test
 		"WS_APP_ID",
 		"WS_APP_SECRET",
 		"POGO_WEBHOOK_SECRET",
+		"POGO_UPLOAD_SECRET",
+		"POGO_UPLOAD_ROOT",
 		"CACHE_STORE",
 		"SESSION_DRIVER",
 		"SESSION_ENCRYPT",
@@ -162,6 +168,12 @@ func TestPrepareEnvironmentGeneratesSecretsWithoutDroppingOperatorValues(t *test
 	}
 	if values["POGO_WEBHOOK_SECRET"] == "" {
 		t.Fatal("POGO_WEBHOOK_SECRET was not generated")
+	}
+	if values["POGO_UPLOAD_SECRET"] == "" {
+		t.Fatal("POGO_UPLOAD_SECRET was not generated")
+	}
+	if got := os.Getenv("POGO_UPLOAD_ROOT"); got != filepath.Join(dataDir, "storage", "app", "pogo-uploads") {
+		t.Fatalf("POGO_UPLOAD_ROOT = %q, want data dir upload root", got)
 	}
 }
 

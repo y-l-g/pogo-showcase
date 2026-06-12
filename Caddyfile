@@ -44,6 +44,24 @@
 		max_attempts {$POGO_QUEUE_MAX_ATTEMPTS:3}
 	}
 
+	pogo_upload {
+		store default {
+			worker {$POGO_SHOWCASE_APP_PATH:.}/public/upload-worker.php
+			signing_secret {$POGO_UPLOAD_SECRET}
+
+			backend local {
+				root {$POGO_UPLOAD_ROOT:storage/app/pogo-uploads}
+			}
+
+			token_ttl {$POGO_UPLOAD_TOKEN_TTL:10m}
+			max_upload_bytes {$POGO_UPLOAD_MAX_BYTES:52428800}
+			max_concurrency {$POGO_UPLOAD_CONCURRENCY:8}
+			read_timeout {$POGO_UPLOAD_READ_TIMEOUT:30s}
+			complete_timeout {$POGO_UPLOAD_COMPLETE_TIMEOUT:10s}
+			progress_ttl {$POGO_UPLOAD_PROGRESS_TTL:10m}
+		}
+	}
+
 	pogo_scheduler {
 		command /proc/self/exe php-cli artisan schedule:run
 		dir {$POGO_SHOWCASE_APP_PATH:.}
@@ -66,6 +84,13 @@
 				}
 			}
 		}
+	}
+
+	@upload path /_pogo/upload/*
+	log_skip @upload
+
+	route @upload {
+		pogo_upload default
 	}
 
 	@websocket path /app/* /apps/* /up /pogo/health

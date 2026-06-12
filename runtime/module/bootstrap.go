@@ -27,6 +27,7 @@ func init() {
 	if frankenphp.EmbeddedAppPath != "" {
 		_ = os.Setenv("POGO_SHOWCASE_APP_PATH", frankenphp.EmbeddedAppPath)
 	}
+	prepareConfigEnvironment()
 
 	caddy.RegisterModule(Bootstrap{})
 	httpcaddyfile.RegisterGlobalOption("pogo_showcase_bootstrap", parseGlobalOption)
@@ -89,30 +90,7 @@ func (b *Bootstrap) prepareEnvironment() (string, error) {
 		return "", err
 	}
 
-	if _, ok := values["APP_KEY"]; !ok {
-		values["APP_KEY"] = "base64:" + randomBase64(32)
-	}
-	if _, ok := values["REVERB_APP_ID"]; !ok {
-		values["REVERB_APP_ID"] = firstNonEmpty(values, "REVERB_APP_ID", "WS_APP_ID")
-		if values["REVERB_APP_ID"] == "" {
-			values["REVERB_APP_ID"] = "pogo-app"
-		}
-	}
-	if _, ok := values["REVERB_APP_KEY"]; !ok {
-		values["REVERB_APP_KEY"] = firstNonEmpty(values, "REVERB_APP_KEY", "WS_APP_ID")
-		if values["REVERB_APP_KEY"] == "" {
-			values["REVERB_APP_KEY"] = "pogo-app"
-		}
-	}
-	if _, ok := values["REVERB_APP_SECRET"]; !ok {
-		values["REVERB_APP_SECRET"] = firstNonEmpty(values, "REVERB_APP_SECRET", "WS_APP_SECRET")
-		if values["REVERB_APP_SECRET"] == "" {
-			values["REVERB_APP_SECRET"] = randomBase64(32)
-		}
-	}
-	if _, ok := values["POGO_WEBHOOK_SECRET"]; !ok {
-		values["POGO_WEBHOOK_SECRET"] = randomBase64(32)
-	}
+	ensureRuntimeValues(values)
 
 	if err := loadRuntimeEnv(values); err != nil {
 		return "", err
@@ -141,6 +119,8 @@ func (b *Bootstrap) prepareEnvironment() (string, error) {
 		"REVERB_PORT":          "8080",
 		"REVERB_SCHEME":        "http",
 		"POGO_WEBHOOK_SECRET":  values["POGO_WEBHOOK_SECRET"],
+		"POGO_UPLOAD_SECRET":   values["POGO_UPLOAD_SECRET"],
+		"POGO_UPLOAD_ROOT":     filepath.Join(dataDir, "storage", "app", "pogo-uploads"),
 		"CACHE_STORE":          "database",
 		"SESSION_DRIVER":       "database",
 		"SESSION_ENCRYPT":      "true",
@@ -221,20 +201,55 @@ func appPath() string {
 	return "."
 }
 
+func prepareConfigEnvironment() {
+	dataDir := os.Getenv("POGO_SHOWCASE_DATA")
+	if dataDir == "" {
+		defaultDir, err := defaultDataDir()
+		if err != nil {
+			return
+		}
+		dataDir = defaultDir
+		_ = os.Setenv("POGO_SHOWCASE_DATA", dataDir)
+	}
+
+	absDataDir, err := filepath.Abs(dataDir)
+	if err == nil {
+		dataDir = absDataDir
+	}
+
+	if os.Getenv("POGO_UPLOAD_ROOT") == "" {
+		_ = os.Setenv("POGO_UPLOAD_ROOT", filepath.Join(dataDir, "storage", "app", "pogo-uploads"))
+	}
+
+	if err := os.MkdirAll(dataDir, 0o755); err != nil {
+		return
+	}
+
+	envPath := filepath.Join(dataDir, "runtime.env")
+	values, err := readEnvFile(envPath)
+	if err != nil {
+		return
+	}
+
+	ensureRuntimeValues(values)
+
+	if err := loadRuntimeEnv(values); err != nil {
+		return
+	}
+
+	_ = writeEnvFile(envPath, values)
+}
+
 func (b *Bootstrap) resolveDataDir() (string, error) {
 	if b.DataDir == "" {
 		b.DataDir = os.Getenv("POGO_SHOWCASE_DATA")
 	}
 	if b.DataDir == "" {
-		exe, err := os.Executable()
+		defaultDir, err := defaultDataDir()
 		if err != nil {
 			return "", err
 		}
-		exe, err = filepath.EvalSymlinks(exe)
-		if err != nil {
-			return "", err
-		}
-		b.DataDir = filepath.Join(filepath.Dir(exe), "data")
+		b.DataDir = defaultDir
 	}
 
 	abs, err := filepath.Abs(b.DataDir)
@@ -243,6 +258,18 @@ func (b *Bootstrap) resolveDataDir() (string, error) {
 	}
 
 	return abs, nil
+}
+
+func defaultDataDir() (string, error) {
+	exe, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+	exe, err = filepath.EvalSymlinks(exe)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(filepath.Dir(exe), "data"), nil
 }
 
 func (b *Bootstrap) appURL() string {
@@ -338,6 +365,36 @@ func firstNonEmpty(values map[string]string, keys ...string) string {
 	return ""
 }
 
+func ensureRuntimeValues(values map[string]string) {
+	if _, ok := values["APP_KEY"]; !ok {
+		values["APP_KEY"] = "base64:" + randomBase64(32)
+	}
+	if _, ok := values["REVERB_APP_ID"]; !ok {
+		values["REVERB_APP_ID"] = firstNonEmpty(values, "REVERB_APP_ID", "WS_APP_ID")
+		if values["REVERB_APP_ID"] == "" {
+			values["REVERB_APP_ID"] = "pogo-app"
+		}
+	}
+	if _, ok := values["REVERB_APP_KEY"]; !ok {
+		values["REVERB_APP_KEY"] = firstNonEmpty(values, "REVERB_APP_KEY", "WS_APP_ID")
+		if values["REVERB_APP_KEY"] == "" {
+			values["REVERB_APP_KEY"] = "pogo-app"
+		}
+	}
+	if _, ok := values["REVERB_APP_SECRET"]; !ok {
+		values["REVERB_APP_SECRET"] = firstNonEmpty(values, "REVERB_APP_SECRET", "WS_APP_SECRET")
+		if values["REVERB_APP_SECRET"] == "" {
+			values["REVERB_APP_SECRET"] = randomBase64(32)
+		}
+	}
+	if _, ok := values["POGO_WEBHOOK_SECRET"]; !ok {
+		values["POGO_WEBHOOK_SECRET"] = randomBase64(32)
+	}
+	if _, ok := values["POGO_UPLOAD_SECRET"]; !ok {
+		values["POGO_UPLOAD_SECRET"] = randomBase64(32)
+	}
+}
+
 func loadRuntimeEnv(values map[string]string) error {
 	for key, value := range values {
 		if _, exists := os.LookupEnv(key); exists {
@@ -351,7 +408,7 @@ func loadRuntimeEnv(values map[string]string) error {
 }
 
 func writeEnvFile(path string, values map[string]string) error {
-	keys := []string{"APP_KEY", "REVERB_APP_SECRET", "POGO_WEBHOOK_SECRET"}
+	keys := []string{"APP_KEY", "REVERB_APP_SECRET", "POGO_WEBHOOK_SECRET", "POGO_UPLOAD_SECRET"}
 	seen := map[string]bool{}
 	var out strings.Builder
 	out.WriteString("# Generated by pogo-showcase. Keep this file to preserve sessions, websocket auth, and operator secrets.\n")
