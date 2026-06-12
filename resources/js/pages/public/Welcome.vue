@@ -1,170 +1,71 @@
 <script setup lang="ts">
+import LandingExamples from '@/components/public/LandingExamples.vue';
 import PublicLayout from '@/layouts/PublicLayout.vue';
 import { register } from '@/routes';
 import { motion } from 'motion-v';
-import ILucideAlarmClockCheck from '~icons/lucide/alarm-clock-check';
-import ILucideArrowDownUp from '~icons/lucide/arrow-down-up';
-import ILucideArrowRight from '~icons/lucide/arrow-right';
-import ILucideGithub from '~icons/lucide/github';
-import ILucideListStart from '~icons/lucide/list-start';
-import ILucideWorkflow from '~icons/lucide/workflow';
 
 useSeoMeta({
-    title: 'Home',
-    description: 'Pogo Showcase',
+    title: 'Pogo Showcase',
+    description:
+        'See concrete Pogo examples for FrankenPHP: realtime chat, parallel jobs, queue workers, and scheduler polling.',
 });
-
-const architecturalPillars = [
-    {
-        title: 'Websocket',
-        description:
-            'Built in fast websocket server, can replace Laravel Reverb or Pusher external service.',
-        icon: ILucideArrowDownUp,
-    },
-    {
-        title: 'Queue',
-        description:
-            'Built in fast in-memory queue (no persistence) can replace php artisan queue:work or horizon in some cases.',
-        icon: ILucideListStart,
-    },
-    {
-        title: 'Pogo Jobs',
-        description:
-            'Dispatch independent request-scoped PHP jobs to dedicated worker pools and await them before responding.',
-        icon: ILucideWorkflow,
-    },
-    {
-        title: 'Scheduler',
-        description:
-            'Built in scheduler server with laravel driver, no cron jobs or php artisan schedule:run needed.',
-        icon: ILucideAlarmClockCheck,
-    },
-];
 </script>
 
 <template>
     <PublicLayout>
         <motion.div
-            :initial="{ opacity: 0, y: 50 }"
+            :initial="{ opacity: 0, y: 28 }"
             :animate="{
                 opacity: 1,
                 y: 0,
-                transition: { duration: 0.5, ease: 'easeOut' },
+                transition: { duration: 0.4, ease: 'easeOut' },
             }"
         >
             <UPageHero
                 :ui="{
                     container:
-                        'mt-[-50px] min-h-screen items-center justify-center ',
+                        'items-center justify-center py-14 sm:py-16 lg:py-20',
+                    title: 'mx-auto max-w-4xl',
+                    description: 'mx-auto max-w-2xl',
                 }"
                 title="Pogo extensions for FrankenPHP"
-                description="Run php artisan octane:frankenphp and enjoy a fast application with built in websocket, queue and scheduler (and more to come)."
+                description="Run realtime chat, parallel jobs, queues, and scheduler examples from one FrankenPHP application."
             >
                 <template #links>
                     <motion.div
-                        :initial="{ opacity: 0, y: 50 }"
+                        :initial="{ opacity: 0, y: 24 }"
                         :animate="{
                             opacity: 1,
                             y: 0,
                             transition: {
-                                delay: 0.2,
-                                duration: 0.5,
+                                delay: 0.15,
+                                duration: 0.4,
                                 ease: 'easeOut',
                             },
                         }"
-                        class="flex flex-wrap justify-center gap-4"
+                        class="flex flex-wrap justify-center gap-3"
                     >
                         <UButton
                             :to="register().url"
                             size="xl"
-                            label="Get Started - It's Free"
-                            :icon="ILucideArrowRight"
+                            label="Get started"
+                            icon="i-lucide-arrow-right"
                             trailing
                         />
                         <UButton
                             to="https://github.com/y-l-g/websocket"
                             target="_blank"
                             size="xl"
-                            label="Star on GitHub"
+                            label="GitHub"
                             color="neutral"
                             variant="ghost"
-                            :icon="ILucideGithub"
+                            icon="i-lucide-github"
                         />
                     </motion.div>
                 </template>
             </UPageHero>
         </motion.div>
 
-        <motion.div
-            :initial="{ opacity: 0, y: 50 }"
-            :whileInView="{
-                opacity: 1,
-                y: 0,
-                transition: { duration: 0.7, ease: 'easeOut' },
-            }"
-            :inViewOptions="{ once: true }"
-        >
-            <UPageSection
-                title="Built for speed and simplicity"
-                description="Give super powers to your application with FrankenPHP and Pogo extensions."
-                :ui="{ title: 'text-center', description: 'text-center' }"
-            >
-                <UPageGrid>
-                    <motion.div
-                        v-for="(pillar, index) in architecturalPillars"
-                        :key="pillar.title"
-                        :initial="{ opacity: 0, y: 50 }"
-                        :whileInView="{
-                            opacity: 1,
-                            y: 0,
-                            transition: {
-                                delay: index * 0.15,
-                                duration: 0.5,
-                                ease: 'easeOut',
-                            },
-                        }"
-                        :inViewOptions="{ once: true }"
-                    >
-                        <UPageCard
-                            :title="pillar.title"
-                            :description="pillar.description"
-                            :icon="pillar.icon"
-                            variant="ghost"
-                        />
-                    </motion.div>
-                </UPageGrid>
-            </UPageSection>
-        </motion.div>
-
-        <!-- <motion.div
-            :initial="{ opacity: 0, y: 50 }"
-            :whileInView="{
-                opacity: 1,
-                y: 0,
-                transition: { duration: 0.7, ease: 'easeOut' },
-            }"
-            :inViewOptions="{ once: true }"
-        >
-            <UPageSection
-                :ui="{
-                    wrapper: 'py-24 sm:py-32',
-                }"
-            >
-                <UPageCTA
-                    title="Ready to Build Your Next Big Idea?"
-                    description="Stop rebuilding the same features. Start with a solid foundation and focus on what makes your application unique."
-                    card
-                    variant="soft"
-                >
-                    <template #links>
-                        <UButton
-                            :to="register().url"
-                            size="xl"
-                            label="Start Building Now"
-                        />
-                    </template>
-                </UPageCTA>
-            </UPageSection>
-        </motion.div> -->
+        <LandingExamples />
     </PublicLayout>
 </template>
