@@ -6,10 +6,9 @@ namespace App\Jobs\Pogo;
 
 use Closure;
 use InvalidArgumentException;
-use Pogo\JobInterface;
 use RuntimeException;
 
-final class FetchOpenMeteoJob implements JobInterface
+final class FetchOpenMeteoJob
 {
     private const ENDPOINTS = [
         'current_weather' => 'https://api.open-meteo.com/v1/forecast',

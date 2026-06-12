@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "31369055059d90e448af10989f3b8edf",
+    "content-hash": "9cca293a43003d3cd44a90824efe0423",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -3917,42 +3917,6 @@
                 "source": "https://github.com/phpstan/phpdoc-parser/tree/2.3.2"
             },
             "time": "2026-01-25T14:56:51+00:00"
-        },
-        {
-            "name": "pogo/async",
-            "version": "dev-main",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/y-l-g/pogo.git",
-                "reference": "e54569a2e6a960acb24a4801df2ae64929483049"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/y-l-g/pogo/zipball/e54569a2e6a960acb24a4801df2ae64929483049",
-                "reference": "e54569a2e6a960acb24a4801df2ae64929483049",
-                "shasum": ""
-            },
-            "require": {
-                "ext-json": "*",
-                "php": ">=8.4"
-            },
-            "default-branch": true,
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Pogo\\": "src/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "description": "Request-scoped parallel PHP jobs for FrankenPHP.",
-            "support": {
-                "issues": "https://github.com/y-l-g/pogo/issues",
-                "source": "https://github.com/y-l-g/pogo/tree/main"
-            },
-            "time": "2026-05-25T21:11:05+00:00"
         },
         {
             "name": "pogo/laravel-queue",
@@ -12733,7 +12697,6 @@
     "aliases": [],
     "minimum-stability": "dev",
     "stability-flags": {
-        "pogo/async": 20,
         "pogo/laravel-queue": 20,
         "pogo/websocket": 20
     },

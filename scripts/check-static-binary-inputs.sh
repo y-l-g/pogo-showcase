@@ -8,8 +8,6 @@ required_files=(
     Caddyfile
     composer.json
     composer.lock
-    packages/pogo/composer.json
-    packages/pogo/src/JobInterface.php
     public/index.php
     public/frankenphp-worker.php
     public/pogo-worker.php
@@ -38,6 +36,16 @@ for file in "${required_files[@]}"; do
         failed=1
     fi
 done
+
+if ! rg -q -- '--with github\.com/y-l-g/pogo/module@main' static-build.Dockerfile; then
+    printf 'static-build.Dockerfile must resolve the async module from GitHub with github.com/y-l-g/pogo/module@main.\n' >&2
+    failed=1
+fi
+
+if rg -n 'github\.com/y-l-g/pogo/module=|async-module' static-build.Dockerfile .github/workflows/static-binary.yaml docs/single-binary.md >&2; then
+    printf 'Static binary builds must not use a local async module path or BuildKit context.\n' >&2
+    failed=1
+fi
 
 if rg -n '(^|[[:space:]])(file|worker|auth_script)[[:space:]]+public/|root[[:space:]]+\*[[:space:]]+public($|[[:space:]])|dir[[:space:]]+\.$' Caddyfile >&2; then
     printf 'Caddyfile contains cwd-sensitive static binary paths. Use {$POGO_SHOWCASE_APP_PATH:.}/... instead.\n' >&2
@@ -111,30 +119,14 @@ fi
 if ! php <<'PHP'
 <?php
 $lock = json_decode(file_get_contents('composer.lock'), true, 512, JSON_THROW_ON_ERROR);
-$package = null;
 foreach ($lock['packages'] ?? [] as $candidate) {
     if (($candidate['name'] ?? null) === 'pogo/async') {
-        $package = $candidate;
-        break;
+        fwrite(STDERR, "composer.lock must not contain pogo/async; the async module is built from GitHub by static-build.Dockerfile.\n");
+        exit(1);
     }
 }
 
-if (! $package) {
-    fwrite(STDERR, "composer.lock does not contain pogo/async.\n");
-    exit(1);
-}
-
-$dist = $package['dist'] ?? [];
-$options = $package['transport-options'] ?? [];
-if (($dist['type'] ?? null) !== 'path' || ($dist['url'] ?? null) !== 'packages/pogo') {
-    fwrite(STDERR, "composer.lock must install pogo/async from packages/pogo for the static showcase binary.\n");
-    exit(1);
-}
-
-if (($options['symlink'] ?? null) !== false) {
-    fwrite(STDERR, "composer.lock must mirror pogo/async instead of symlinking it for the static showcase binary.\n");
-    exit(1);
-}
+exit(0);
 PHP
 then
     failed=1

@@ -2,7 +2,7 @@
 
 ## GitHub Actions build
 
-The `Build static binary` workflow builds Linux `x86_64` and `aarch64` binaries
+The `Build static binary` workflow currently builds the Linux `aarch64` binary
 in GitHub Actions.
 
 - Run it manually from the Actions tab to download the binary as a workflow
@@ -47,8 +47,8 @@ docker buildx build --load \
 
 The embedded Laravel app is built from the local `pogoShowcase` checkout. The
 Go/Caddy modules are resolved from GitHub `main` during the static build:
-`pogo`, `queue`, `scheduler`, `websocket`, and `pogo-showcase/runtime`. Push
-changes to those repositories before building if the binary must include them.
+`pogo`, `queue`, `scheduler`, and `websocket`. Push changes to those
+repositories before building if the binary must include them.
 
 The `github-token` build secret is used only by `static-php-cli` downloads to
 avoid unauthenticated GitHub API rate limits. It is not used for Go module URL

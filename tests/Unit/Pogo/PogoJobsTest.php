@@ -3,7 +3,6 @@
 declare(strict_types=1);
 
 use App\Jobs\Pogo\FetchOpenMeteoJob;
-use Pogo\JobInterface;
 
 it('normalizes current weather data from Open-Meteo', function (): void {
     $job = new FetchOpenMeteoJob(fn () => [
@@ -26,7 +25,7 @@ it('normalizes current weather data from Open-Meteo', function (): void {
         'longitude' => 2.3488,
     ]);
 
-    expect($job)->toBeInstanceOf(JobInterface::class)
+    expect(is_callable([$job, 'handle']))->toBeTrue()
         ->and($result['source'])->toBe('current_weather')
         ->and($result['temperature'])->toBe(18.4)
         ->and($result['humidity'])->toBe(64)
@@ -52,7 +51,7 @@ it('normalizes daily forecast data from Open-Meteo', function (): void {
         'longitude' => 2.3488,
     ]);
 
-    expect($job)->toBeInstanceOf(JobInterface::class)
+    expect(is_callable([$job, 'handle']))->toBeTrue()
         ->and($result['source'])->toBe('daily_forecast')
         ->and($result['high'])->toBe(21.2)
         ->and($result['precipitation_probability'])->toBe(30)
@@ -82,7 +81,7 @@ it('normalizes air quality data from Open-Meteo', function (): void {
         'longitude' => 2.3488,
     ]);
 
-    expect($job)->toBeInstanceOf(JobInterface::class)
+    expect(is_callable([$job, 'handle']))->toBeTrue()
         ->and($result['source'])->toBe('air_quality')
         ->and($result['european_aqi'])->toBe(32)
         ->and($result['category'])->toBe('Fair')
@@ -101,7 +100,7 @@ it('normalizes elevation data from Open-Meteo', function (): void {
         'longitude' => 2.3488,
     ]);
 
-    expect($job)->toBeInstanceOf(JobInterface::class)
+    expect(is_callable([$job, 'handle']))->toBeTrue()
         ->and($result['source'])->toBe('elevation')
         ->and($result['elevation'])->toBe(35)
         ->and($result['elevation_unit'])->toBe('m')

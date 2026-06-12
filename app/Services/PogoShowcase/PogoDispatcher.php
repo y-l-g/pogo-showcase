@@ -8,7 +8,7 @@ class PogoDispatcher
 {
     public function available(): bool
     {
-        return function_exists('pogo_dispatch')
+        return function_exists('pogo_spawn')
             && function_exists('pogo_await')
             && function_exists('pogo_pool_size');
     }
@@ -27,11 +27,11 @@ class PogoDispatcher
      */
     public function dispatch(string $class, array $args = [], string $pool = 'default'): int
     {
-        if (! function_exists('pogo_dispatch')) {
+        if (! function_exists('pogo_spawn')) {
             throw new \RuntimeException('The Pogo extension is not loaded in this PHP runtime.');
         }
 
-        return (int) pogo_dispatch($class, $args, $pool);
+        return (int) pogo_spawn($class, $args, $pool);
     }
 
     public function await(int $handle, float $timeout = 5.0): mixed

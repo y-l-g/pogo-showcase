@@ -2,8 +2,6 @@
 
 declare(strict_types=1);
 
-use Pogo\JobInterface;
-
 if ((! ($_SERVER['FRANKENPHP_WORKER'] ?? false)) || ! function_exists('frankenphp_handle_request')) {
     echo 'FrankenPHP must be in worker mode to use this script.';
     exit(1);
@@ -30,7 +28,7 @@ while (frankenphp_handle_request(static function (mixed $payload): string {
 
         $job = new $class;
 
-        throw_unless($job instanceof JobInterface, RuntimeException::class, 'Pogo job must implement Pogo\\JobInterface.');
+        throw_unless(is_callable([$job, 'handle']), RuntimeException::class, 'Pogo job must define handle(array $args).');
 
         return json_encode(
             ['ok' => true, 'result' => $job->handle($args)],

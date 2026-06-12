@@ -17,11 +17,9 @@
 	}
 
 	pogo {
-		pool default {
-			worker {$POGO_SHOWCASE_APP_PATH:.}/public/pogo-worker.php
-			num_threads {$POGO_DEFAULT_THREADS:4}
-			max_wait 30s
-		}
+		worker {$POGO_SHOWCASE_APP_PATH:.}/public/pogo-worker.php
+		num_threads {$POGO_DEFAULT_THREADS:4}
+		max_wait 30s
 
 		pool external_api {
 			worker {$POGO_SHOWCASE_APP_PATH:.}/public/pogo-worker.php
