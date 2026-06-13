@@ -1,8 +1,17 @@
+# syntax=docker/dockerfile:1.7
 FROM dunglas/frankenphp:1.12.4-builder-php8.5.6-trixie AS builder
 
 COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
 
-RUN CGO_ENABLED=1 \
+RUN --mount=type=ssh \
+    apt-get update \
+    && apt-get install -y --no-install-recommends openssh-client \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p -m 0700 ~/.ssh \
+    && ssh-keyscan github.com >> ~/.ssh/known_hosts \
+    && git config --global url."ssh://git@github.com/".insteadOf "https://github.com/" \
+    && CGO_ENABLED=1 \
+    GOPRIVATE=github.com/y-l-g/upload \
     GONOPROXY=github.com/y-l-g/pogo \
     XCADDY_SETCAP=1 \
     XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s' -tags=nobadger,nomysql,nopgx" \
@@ -16,6 +25,7 @@ RUN CGO_ENABLED=1 \
     --with github.com/y-l-g/scheduler/module@main \
     --with github.com/y-l-g/websocket/module@main \
     --with github.com/y-l-g/queue/module@main \
+    --with github.com/y-l-g/upload/module@main \
     --with github.com/y-l-g/pogo/module@main
 
 

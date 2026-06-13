@@ -5,6 +5,8 @@ services:
         build:
             context: ..
             dockerfile: .dev/Dockerfile
+            ssh:
+                - default
             args:
                 USER_ID: ${USER_ID:-1000}
                 GROUP_ID: ${GROUP_ID:-1000}
@@ -54,6 +56,8 @@ services:
         build:
             context: ..
             dockerfile: .dev/Dockerfile
+            ssh:
+                - default
             args:
                 USER_ID: ${USER_ID:-1000}
                 GROUP_ID: ${GROUP_ID:-1000}

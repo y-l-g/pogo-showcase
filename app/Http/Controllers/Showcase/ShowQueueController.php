@@ -16,7 +16,7 @@ final class ShowQueueController extends Controller
         $stats = $this->queueStats();
 
         return Inertia::render('showcase/Queue', [
-            'queueAvailable' => function_exists('pogo_queue') && ($stats['driver_ready'] ?? false) === true,
+            'queueAvailable' => $this->hasQueueApi() && ($stats['driver_ready'] ?? false) === true,
             'queueStats' => $stats,
             'workerCount' => max(1, (int) config('queue.connections.pogo.threads', 4)),
             'batch' => $board->current(),
@@ -70,5 +70,14 @@ final class ShowQueueController extends Controller
             'max_message_bytes' => $queue['max_payload_bytes'] ?? null,
             'driver_ready' => ($decoded['ready'] ?? false) === true && ($queue['ready'] ?? false) === true,
         ]);
+    }
+
+    private function hasQueueApi(): bool
+    {
+        return function_exists('pogo_queue_push')
+            && function_exists('pogo_queue_ack')
+            && function_exists('pogo_queue_release')
+            && function_exists('pogo_queue_fail')
+            && function_exists('pogo_queue_status');
     }
 }

@@ -29,7 +29,7 @@ it('renders the queue showcase page', function (): void {
         );
 });
 
-it('normalizes native queue status for the queue showcase page', function (): void {
+it('normalizes native v2 queue status for the queue showcase page', function (): void {
     $GLOBALS['pogo_queue_status_payload'] = [
         'ready' => true,
         'queues' => [[
@@ -168,13 +168,6 @@ afterEach(function (): void {
     unset($GLOBALS['pogo_queue_status_payload']);
 });
 
-if (! function_exists('pogo_queue')) {
-    function pogo_queue(string $data): int
-    {
-        return 1;
-    }
-}
-
 if (! function_exists('pogo_queue_push')) {
     function pogo_queue_push(string $queue, string $payload, int $delaySeconds = 0): string
     {
@@ -189,6 +182,27 @@ if (! function_exists('pogo_queue_push')) {
             'id' => 'test-delivery-'.count($GLOBALS['pogo_queue_push_calls']),
             'code' => 1,
         ], JSON_THROW_ON_ERROR);
+    }
+}
+
+if (! function_exists('pogo_queue_ack')) {
+    function pogo_queue_ack(string $queue, string $deliveryId): int
+    {
+        return 1;
+    }
+}
+
+if (! function_exists('pogo_queue_release')) {
+    function pogo_queue_release(string $queue, string $deliveryId, int $delaySeconds = 0): int
+    {
+        return 1;
+    }
+}
+
+if (! function_exists('pogo_queue_fail')) {
+    function pogo_queue_fail(string $queue, string $deliveryId, string $reason = ''): int
+    {
+        return 1;
     }
 }
 
