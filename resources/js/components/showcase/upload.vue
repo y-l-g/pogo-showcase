@@ -423,8 +423,13 @@ onBeforeUnmount(stopPolling);
                     </UBadge>
                 </div>
                 <h1 class="text-2xl font-semibold tracking-normal">
-                    Upload ingress comparison
+                    Upload pressure isolation
                 </h1>
+                <p class="mt-2 max-w-3xl text-sm text-muted">
+                    This is not a speed race for one small file. PHP authorizes
+                    the upload, while Pogo receives the slow body, enforces
+                    limits, stores bytes, and reports completion back to PHP.
+                </p>
             </div>
 
             <div class="flex flex-wrap gap-2">
@@ -474,6 +479,14 @@ onBeforeUnmount(stopPolling);
             :description="`Choose a file up to ${maxBytesLabel} to run this showcase.`"
         />
 
+        <UAlert
+            color="info"
+            variant="subtle"
+            icon="i-lucide-gauge"
+            title="The useful signal is app responsiveness under upload pressure"
+            description="The single-file flow below proves both paths work. The pressure test shows why moving upload bodies out of Laravel workers matters."
+        />
+
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div
                 v-for="metric in metricCards"
@@ -494,7 +507,8 @@ onBeforeUnmount(stopPolling);
                     <div>
                         <h2 class="font-semibold">Raw PHP</h2>
                         <p class="text-sm text-muted">
-                            Laravel receives the body and moves the bytes.
+                            Laravel receives the body and keeps a request worker
+                            busy until the file has been streamed.
                         </p>
                     </div>
                     <UBadge color="neutral" variant="subtle">baseline</UBadge>
@@ -515,7 +529,7 @@ onBeforeUnmount(stopPolling);
                             </div>
                             <div>
                                 <p class="text-xs text-muted">Request time</p>
-                                <p class="font-medium">Held open</p>
+                                <p class="font-medium">Worker occupied</p>
                             </div>
                         </div>
                     </div>
@@ -576,7 +590,8 @@ onBeforeUnmount(stopPolling);
                     <div>
                         <h2 class="font-semibold">Pogo Upload</h2>
                         <p class="text-sm text-muted">
-                            PHP signs intent; Go owns the upload stream.
+                            PHP signs a short-lived intent; Go owns the upload
+                            stream and emits the completion event.
                         </p>
                     </div>
                     <UBadge color="primary" variant="subtle">native</UBadge>
@@ -597,7 +612,7 @@ onBeforeUnmount(stopPolling);
                             </div>
                             <div>
                                 <p class="text-xs text-muted">Request time</p>
-                                <p class="font-medium">Off Laravel</p>
+                                <p class="font-medium">Off app workers</p>
                             </div>
                         </div>
                     </div>
