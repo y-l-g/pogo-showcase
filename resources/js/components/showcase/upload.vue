@@ -82,10 +82,6 @@ type PressureState = {
     summary: string | null;
 };
 
-type FetchInitWithDuplex = RequestInit & {
-    duplex: 'half';
-};
-
 const props = defineProps<{
     uploadAvailable: boolean;
     uploadStatus: UploadStatus;
@@ -98,8 +94,7 @@ const generatedPayload = ref<Blob | null>(null);
 const generatedSize = 2 * 1024 * 1024;
 const pressureUploadCount = 5;
 const pressurePayloadSize = 768 * 1024;
-const pressureChunkSize = 16 * 1024;
-const pressureChunkDelayMs = 40;
+const pressureRawDelayMs = 160;
 const pressurePingIntervalMs = 350;
 const rawLane = ref<LaneState>(emptyLane());
 const pogoLane = ref<LaneState>(emptyLane());
@@ -113,10 +108,27 @@ const maxPollAttempts = 45;
 let pressurePingTimer: number | null = null;
 let pressurePingId = 0;
 
-const csrfToken = () =>
-    document
-        .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
-        ?.getAttribute('content') ?? '';
+const csrfHeaders = () => {
+    const xsrfToken = document.cookie
+        .split('; ')
+        .find((cookie) => cookie.startsWith('XSRF-TOKEN='))
+        ?.split('=')
+        .slice(1)
+        .join('=');
+
+    if (xsrfToken) {
+        return {
+            'X-XSRF-TOKEN': decodeURIComponent(xsrfToken),
+        };
+    }
+
+    return {
+        'X-CSRF-TOKEN':
+            document
+                .querySelector<HTMLMetaElement>('meta[name="csrf-token"]')
+                ?.getAttribute('content') ?? '',
+    };
+};
 
 const selectedPayload = computed(() => {
     if (file.value) {
@@ -276,7 +288,7 @@ async function runRawUpload() {
             payload.blob,
             {
                 'Content-Type': payload.contentType,
-                'X-CSRF-TOKEN': csrfToken(),
+                ...csrfHeaders(),
                 'X-Upload-Filename': payload.filename,
             },
             (percent) => {
@@ -311,7 +323,7 @@ async function runPogoUpload() {
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': csrfToken(),
+                ...csrfHeaders(),
             },
             body: JSON.stringify({
                 filename: payload.filename,
@@ -384,9 +396,11 @@ async function runPressureTest(mode: PressureMode) {
         }
 
         pressure.value.summary =
-            mode === 'raw'
-                ? 'Raw uploads used normal Laravel request workers while pings were running.'
-                : 'Pogo uploads streamed through the native handler while Laravel only handled intents and pings.';
+            failures.length === 0
+                ? mode === 'raw'
+                    ? 'Raw uploads used normal Laravel request workers while pings were running.'
+                    : 'Pogo uploads streamed through the native handler while Laravel only handled intents and pings.'
+                : null;
     } catch (error) {
         pressure.value.error =
             error instanceof Error ? error.message : 'Pressure test failed.';
@@ -404,14 +418,15 @@ async function runPressureUpload(mode: PressureMode, index: number) {
         const filename = `pressure-${mode}-${index}.txt`;
 
         if (mode === 'raw') {
-            await sendStreamingUpload(
+            await sendPressureUpload(
                 raw().url,
                 'POST',
                 payload,
                 {
                     'Content-Type': 'text/plain',
-                    'X-CSRF-TOKEN': csrfToken(),
+                    ...csrfHeaders(),
                     'X-Upload-Filename': filename,
+                    'X-Upload-Pressure-Delay-Ms': pressureRawDelayMs.toString(),
                 },
                 (bytes) => {
                     pressure.value.bytesStreamed += bytes;
@@ -437,7 +452,7 @@ async function runPogoPressureUpload(payload: Blob, filename: string) {
         headers: {
             Accept: 'application/json',
             'Content-Type': 'application/json',
-            'X-CSRF-TOKEN': csrfToken(),
+            ...csrfHeaders(),
         },
         body: JSON.stringify({
             filename,
@@ -455,7 +470,7 @@ async function runPogoPressureUpload(payload: Blob, filename: string) {
         startPolling(created.upload_id);
     }
 
-    await sendStreamingUpload(
+    await sendPressureUpload(
         created.url,
         created.method ?? 'PUT',
         payload,
@@ -517,74 +532,64 @@ function sendWithProgress(
     });
 }
 
-async function sendStreamingUpload(
+function sendPressureUpload(
     url: string,
     method: string,
     body: Blob,
     headers: Record<string, string>,
     onBytes: (bytes: number) => void,
 ): Promise<UploadResult> {
-    const response = await fetch(url, {
-        method,
-        credentials: 'same-origin',
-        headers: {
-            Accept: 'application/json',
-            ...headers,
-        },
-        body: makeThrottledBody(body, onBytes),
-        duplex: 'half',
-    } as FetchInitWithDuplex);
-    const payload = await readUploadResponse(response);
+    return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        let lastLoaded = 0;
 
-    if (response.ok && payload.ok !== false) {
-        return payload;
-    }
+        xhr.open(method, url);
+        xhr.responseType = 'json';
+        xhr.setRequestHeader('Accept', 'application/json');
+        for (const [key, value] of Object.entries(headers)) {
+            xhr.setRequestHeader(key, value);
+        }
 
-    throw new Error(
-        errorMessage(
-            payload.error ?? {
-                code: 'http_error',
-                message: `HTTP ${response.status}`,
-            },
-        ),
-    );
-}
+        xhr.upload.onprogress = (event) => {
+            if (event.loaded > lastLoaded) {
+                onBytes(event.loaded - lastLoaded);
+                lastLoaded = event.loaded;
+            }
+        };
+        xhr.onerror = () => reject(new Error('Network error during upload.'));
+        xhr.onload = () => {
+            if (body.size > lastLoaded) {
+                onBytes(body.size - lastLoaded);
+            }
 
-function makeThrottledBody(
-    body: Blob,
-    onBytes: (bytes: number) => void,
-): ReadableStream<Uint8Array> {
-    let offset = 0;
+            const response =
+                typeof xhr.response === 'object' && xhr.response !== null
+                    ? (xhr.response as UploadResult)
+                    : parseJson(xhr.responseText);
 
-    return new ReadableStream<Uint8Array>({
-        async pull(controller) {
-            if (offset >= body.size) {
-                controller.close();
+            if (
+                xhr.status >= 200 &&
+                xhr.status < 300 &&
+                response.ok !== false
+            ) {
+                resolve(response);
                 return;
             }
 
-            const nextOffset = Math.min(offset + pressureChunkSize, body.size);
-            const buffer = await body.slice(offset, nextOffset).arrayBuffer();
+            reject(
+                new Error(
+                    errorMessage(
+                        response.error ?? {
+                            code: 'http_error',
+                            message: `HTTP ${xhr.status}`,
+                        },
+                    ),
+                ),
+            );
+        };
 
-            await sleep(pressureChunkDelayMs);
-
-            offset = nextOffset;
-            onBytes(buffer.byteLength);
-            controller.enqueue(new Uint8Array(buffer));
-        },
+        xhr.send(body);
     });
-}
-
-async function readUploadResponse(response: Response): Promise<UploadResult> {
-    try {
-        return (await response.json()) as UploadResult;
-    } catch {
-        return { ok: false };
-    }
-}
-
-function sleep(ms: number): Promise<void> {
-    return new Promise((resolve) => window.setTimeout(resolve, ms));
 }
 
 function parseJson(value: string): UploadResult {
@@ -822,10 +827,10 @@ onBeforeUnmount(stopPressurePings);
                         Ping Laravel while uploads are streaming
                     </h2>
                     <p class="mt-1 max-w-3xl text-sm text-muted">
-                        Each run starts throttled upload streams and probes a
-                        normal Laravel route during the upload. Raw PHP keeps
-                        app workers occupied; Pogo keeps the body stream in the
-                        native handler.
+                        Each run starts concurrent uploads and probes a normal
+                        Laravel route during the upload. Raw PHP adds a small
+                        per-chunk delay to make worker pressure visible; Pogo
+                        keeps the body stream in the native handler.
                     </p>
                 </div>
 
@@ -1126,7 +1131,11 @@ onBeforeUnmount(stopPressurePings);
                             <div>
                                 <p class="text-xs text-muted">Elapsed</p>
                                 <p class="font-semibold">
-                                    {{ pogoLane.elapsedMs ?? 'running' }}ms
+                                    {{
+                                        pogoLane.elapsedMs !== null
+                                            ? `${pogoLane.elapsedMs}ms`
+                                            : 'running'
+                                    }}
                                 </p>
                             </div>
                             <div>

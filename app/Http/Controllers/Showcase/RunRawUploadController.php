@@ -21,6 +21,7 @@ final class RunRawUploadController extends Controller
         $filename = $this->safeFilename((string) $request->headers->get('X-Upload-Filename', 'upload.bin'));
         $contentType = (string) $request->headers->get('Content-Type', 'application/octet-stream');
         $contentLength = (int) $request->headers->get('Content-Length', '0');
+        $pressureDelayUs = $this->pressureDelayUs($request);
 
         if (! in_array($contentType, UploadShowcase::acceptedContentTypes(), true)) {
             return $this->failure('unsupported_content_type', 'Content type is not accepted.', 415);
@@ -66,6 +67,10 @@ final class RunRawUploadController extends Controller
 
                 hash_update($hash, $chunk);
                 fwrite($output, $chunk);
+
+                if ($pressureDelayUs > 0) {
+                    usleep($pressureDelayUs);
+                }
             }
         } finally {
             fclose($input);
@@ -104,5 +109,12 @@ final class RunRawUploadController extends Controller
         $name = trim((string) preg_replace('/[^A-Za-z0-9._-]+/', '-', $basename), '.-');
 
         return $name !== '' ? Str::limit($name, 120, '') : 'upload.bin';
+    }
+
+    private function pressureDelayUs(Request $request): int
+    {
+        $delayMs = (int) $request->headers->get('X-Upload-Pressure-Delay-Ms', '0');
+
+        return min(max($delayMs, 0), 250) * 1000;
     }
 }
