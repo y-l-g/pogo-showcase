@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('social_accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->enum('provider', SocialiteProviderEnum::cases());
+            $table->enum('provider', SocialiteProviderEnum::values());
             $table->string('provider_id');
             $table->text('token')->nullable();
             $table->text('refresh_token')->nullable();

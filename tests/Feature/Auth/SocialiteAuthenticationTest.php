@@ -51,3 +51,8 @@ it('can authenticate an existing user via socialite', function (): void {
 
     assertAuthenticatedAs($user);
 });
+
+it('does not expose github socialite routes', function (): void {
+    get(route('provider.redirect', 'github'))->assertNotFound();
+    get(route('provider.callback', 'github'))->assertNotFound();
+});

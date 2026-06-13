@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Enums\Auth\SocialiteProviderEnum;
 use App\Http\Controllers\Auth\LoginWithLinkController;
 use App\Http\Controllers\Auth\Socialite\HandleProviderCallbackController;
 use App\Http\Controllers\Auth\Socialite\RedirectToProviderController;
@@ -20,14 +21,22 @@ Route::middleware(['throttle:6,1'])->group(function (): void {
 
     Route::middleware(['auth', 'verified', 'nossr'])->group(function (): void {
 
-        Route::get('auth/{provider}/link', RedirectToProviderController::class)->name('provider.link');
+        Route::get('auth/{provider}/link', RedirectToProviderController::class)
+            ->whereIn('provider', SocialiteProviderEnum::values())
+            ->name('provider.link');
 
-        Route::delete('auth/{provider}/unlink', UnlinkProviderController::class)->name('provider.unlink');
+        Route::delete('auth/{provider}/unlink', UnlinkProviderController::class)
+            ->whereIn('provider', SocialiteProviderEnum::values())
+            ->name('provider.unlink');
 
     });
 
-    Route::get('auth/{provider}/redirect', RedirectToProviderController::class)->name('provider.redirect');
+    Route::get('auth/{provider}/redirect', RedirectToProviderController::class)
+        ->whereIn('provider', SocialiteProviderEnum::values())
+        ->name('provider.redirect');
 
-    Route::get('auth/{provider}/callback', HandleProviderCallbackController::class)->name('provider.callback');
+    Route::get('auth/{provider}/callback', HandleProviderCallbackController::class)
+        ->whereIn('provider', SocialiteProviderEnum::values())
+        ->name('provider.callback');
 
 });

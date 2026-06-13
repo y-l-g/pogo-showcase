@@ -5,7 +5,6 @@ import { login } from '@/routes';
 import { redirect } from '@/routes/provider';
 import { store } from '@/routes/register';
 import { Form } from '@inertiajs/vue3';
-import IBiGithub from '~icons/bi/github';
 import IBiGoogle from '~icons/bi/google';
 useHead({
     title: 'Register',
@@ -112,15 +111,6 @@ useHead({
                 block
                 label="Google"
                 :href="redirect({ provider: 'google' }).url"
-                external
-                target="_self"
-            ></UButton>
-            <UButton
-                :icon="IBiGithub"
-                variant="subtle"
-                block
-                label="GitHub"
-                :href="redirect({ provider: 'github' }).url"
                 external
                 target="_self"
             ></UButton>

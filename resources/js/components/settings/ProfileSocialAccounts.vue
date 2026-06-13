@@ -19,7 +19,6 @@ const unlinkAccount = (provider: App.Enums.Auth.SocialiteProviderEnum) => {
 
 const providerIcons = {
     google: 'i-bi-google',
-    github: 'i-bi-github',
 };
 </script>
 

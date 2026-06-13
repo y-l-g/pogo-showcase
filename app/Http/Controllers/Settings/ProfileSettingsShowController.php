@@ -15,7 +15,10 @@ final readonly class ProfileSettingsShowController
     {
         return Inertia::render('settings/Profile', [
             'availableProviders' => SocialiteProviderEnum::cases(),
-            'linkedProviders' => $request->user()->socialAccounts()->get()->pluck('provider'),
+            'linkedProviders' => $request->user()->socialAccounts()
+                ->whereIn('provider', SocialiteProviderEnum::values())
+                ->get()
+                ->pluck('provider'),
         ]);
     }
 }

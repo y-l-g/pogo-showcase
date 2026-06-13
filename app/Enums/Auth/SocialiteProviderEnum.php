@@ -10,7 +10,6 @@ use Spatie\TypeScriptTransformer\Attributes\TypeScript;
 enum SocialiteProviderEnum: string
 {
     case GOOGLE = 'google';
-    case GITHUB = 'github';
 
     /**
      * @param  array<string>  $providers
@@ -19,5 +18,13 @@ enum SocialiteProviderEnum: string
     public static function collect(array $providers): array
     {
         return array_map(fn (string $provider) => self::from($provider), $providers);
+    }
+
+    /**
+     * @return array<string>
+     */
+    public static function values(): array
+    {
+        return array_map(fn (self $provider): string => $provider->value, self::cases());
     }
 }
