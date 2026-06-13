@@ -116,15 +116,24 @@ const queueTimers: Array<ReturnType<typeof setTimeout>> = [];
 
 const snippets = {
     chat: `// Vue
-useEchoPublic('landing.chat', '.message.sent', addChatMessage)
-await fetch('/examples/chat/message', { method: 'POST', body })
+useEchoPublic(
+  'landing.chat',
+  '.message.sent',
+  addChatMessage,
+)
+
+await fetch('/examples/chat/message', {
+  method: 'POST',
+  body,
+})
 
 // Laravel
 $chat->record($message);
 event(new LandingChatMessage($message));`,
     pulse: `// Vue
 setInterval(async () => {
-  pulse.value = await fetch('/examples/pulse').then(r => r.json())
+  const response = await fetch('/examples/pulse')
+  pulse.value = await response.json()
 }, 1000)
 
 // Laravel
@@ -132,10 +141,16 @@ return ['ran_at' => now()->format('H:i:s')];`,
     parallel: `// Laravel
 $handles = [];
 foreach ($tasks as $task) {
-  $handles[] = $pogo->dispatch(WaitJob::class, $task);
+    $handles[] = $pogo->dispatch(
+        WaitJob::class,
+        $task,
+    );
 }
 
-$results = array_map(fn ($h) => $pogo->await($h), $handles);`,
+$results = array_map(
+    fn ($h) => $pogo->await($h),
+    $handles,
+);`,
     upload: `// Laravel controller
 $intent = pogo_upload_create([
   'key' => "users/{$user->id}/uploads/avatar.jpg",
@@ -144,11 +159,19 @@ $intent = pogo_upload_create([
 ]);
 
 // Browser
-await fetch($intent['url'], { method: 'PUT', body: file });
+await fetch($intent['url'], {
+  method: 'PUT',
+  body: file,
+});
 
 // public/upload-worker.php records the completion event.`,
     queue: `// Laravel
-dispatch(new QueueDemoJob($batchId, $jobId, 800, 'Send receipt'))
+dispatch(new QueueDemoJob(
+    $batchId,
+    $jobId,
+    800,
+    'Send receipt',
+))
   ->onConnection('pogo')
   ->onQueue('default');
 

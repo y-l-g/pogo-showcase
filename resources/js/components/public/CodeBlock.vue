@@ -25,7 +25,7 @@ const getHighlighter = () => {
         import('@shikijs/langs/javascript'),
         import('@shikijs/langs/php'),
         import('@shikijs/themes/github-light'),
-        import('@shikijs/themes/github-dark'),
+        import('@shikijs/themes/github-dark-high-contrast'),
     ]).then(
         ([
             { createHighlighterCore },
@@ -33,10 +33,10 @@ const getHighlighter = () => {
             javascript,
             php,
             githubLight,
-            githubDark,
+            githubDarkHighContrast,
         ]) =>
             createHighlighterCore({
-                themes: [githubLight.default, githubDark.default],
+                themes: [githubLight.default, githubDarkHighContrast.default],
                 langs: [javascript.default, php.default],
                 engine: createJavaScriptRegexEngine(),
             }),
@@ -73,7 +73,7 @@ const highlightCode = async () => {
             lang: props.language,
             themes: {
                 light: 'github-light',
-                dark: 'github-dark',
+                dark: 'github-dark-high-contrast',
             },
             defaultColor: false,
         });
@@ -100,10 +100,10 @@ watch(
 
 <template>
     <div
-        class="code-block h-full overflow-hidden rounded-lg border border-default bg-muted/40"
+        class="code-block h-full overflow-hidden rounded-lg border border-default bg-white/80 shadow-sm dark:border-white/10 dark:bg-[#0a0c10]"
     >
         <div
-            class="flex items-center justify-between gap-3 border-b border-default px-3 py-2.5 sm:px-4"
+            class="flex items-center justify-between gap-3 border-b border-default bg-muted/30 px-3 py-2.5 sm:px-4 dark:border-white/10 dark:bg-white/[0.03]"
         >
             <div class="flex min-w-0 items-center gap-2">
                 <UIcon
@@ -131,7 +131,7 @@ watch(
         <div v-if="highlightedCode" v-html="highlightedCode" />
         <pre
             v-else
-            class="min-h-56 overflow-auto p-4 text-xs leading-relaxed break-words whitespace-pre-wrap text-toned"
+            class="min-h-56 overflow-auto bg-white p-4 text-[13px] leading-relaxed whitespace-pre text-toned dark:bg-[#0a0c10] dark:text-white"
         ><code>{{ code }}</code></pre>
     </div>
 </template>
@@ -141,13 +141,17 @@ watch(
     min-height: 14rem;
     margin: 0;
     overflow: auto;
-    background: transparent !important;
+    background: var(--shiki-light-bg) !important;
     padding: 1rem;
     color: var(--shiki-light);
-    font-size: 0.75rem;
+    font-size: 0.8125rem;
     line-height: 1.625;
-    white-space: pre-wrap;
-    overflow-wrap: break-word;
+    white-space: pre;
+}
+
+.code-block :deep(.shiki code) {
+    display: block;
+    min-width: max-content;
 }
 
 .code-block :deep(.shiki span) {
@@ -155,8 +159,12 @@ watch(
     background: transparent !important;
 }
 
-:global(.dark) .code-block :deep(.shiki),
-:global(.dark) .code-block :deep(.shiki span) {
+:global(.dark .code-block .shiki) {
+    background: var(--shiki-dark-bg) !important;
+    color: var(--shiki-dark);
+}
+
+:global(.dark .code-block .shiki span) {
     color: var(--shiki-dark);
 }
 </style>
