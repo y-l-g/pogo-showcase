@@ -44,32 +44,34 @@
     }
 }
 
-http://pogo.test {
+:80 {
     log {
         level INFO
         output stdout
     }
 
-    route /app/* {
+    @websocket path /app/* /apps/* /up /pogo/health
+    route @websocket {
         pogo_websocket {
-            app_id          pogo-app
-            auth_path       /pogo/auth
-            auth_script     public/websocket-worker.php
-            webhook_secret  super-secret-key
+            app_id          {$REVERB_APP_ID:pogo-app}
+            app_key         {$REVERB_APP_KEY:pogo-app}
+            app_secret      {$REVERB_APP_SECRET:super-secret-key}
+            webhook_secret  {$POGO_WEBHOOK_SECRET:super-secret-key}
+            allowed_origins {$POGO_WS_ALLOWED_ORIGINS:*}
             
             handshake_rate  100         # New connection attempts per second (Default: 100)
             handshake_burst 50          # Burst allowance (Default: 50)
             max_connections 10000       # Max concurrent clients
             max_auth_body   16384       # Max PHP Auth response size (bytes)
             max_concurrent_auth 100     # Max concurrent PHP Auth requests (DoS Protection)
+            broker_queue_size 1024      # Internal broker queue before publish fails fast
+            shard_queue_size 1024       # Per-shard control/broadcast queue
             
-            num_workers     2           # Number of PHP workers dedicated to Auth
             num_shards      8           # Internal sharding (Default: 2 * CPU Cores)
             
             ping_period     54s         # Server Ping interval
             pong_wait       60s         # Client Pong timeout
             write_wait      10s         # Socket write timeout
-            app_secret      super-secret-key
             
             # redis_host      localhost:6379
         }

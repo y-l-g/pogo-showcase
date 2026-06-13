@@ -21,6 +21,13 @@ services:
         tty: true
         environment:
             DB_HOST: db
+            BROADCAST_CONNECTION: ${BROADCAST_CONNECTION:-reverb}
+            REVERB_APP_ID: ${REVERB_APP_ID:-${WS_APP_ID:-pogo-app}}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-${WS_APP_ID:-pogo-app}}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-${WS_APP_SECRET:-super-secret-key}}
+            REVERB_HOST: ${REVERB_HOST:-127.0.0.1}
+            REVERB_PORT: 80
+            REVERB_SCHEME: ${REVERB_SCHEME:-http}
             AUTORUN_ENABLED: true
             AUTORUN_LARAVEL_ROUTE_CACHE: false
             AUTORUN_LARAVEL_VIEW_CACHE: false
@@ -35,7 +42,7 @@ services:
             test:
                 [
                     'CMD-SHELL',
-                    'curl -fsS http://127.0.0.1/ >/dev/null || exit 1',
+                    'curl -fsS -H "Host: pogo.test" http://127.0.0.1/up >/dev/null || exit 1',
                 ]
             interval: 10s
             timeout: 5s
@@ -54,6 +61,14 @@ services:
         volumes:
             - ../:/var/www/html
         tty: true
+        environment:
+            BROADCAST_CONNECTION: ${BROADCAST_CONNECTION:-reverb}
+            REVERB_APP_ID: ${REVERB_APP_ID:-${WS_APP_ID:-pogo-app}}
+            REVERB_APP_KEY: ${REVERB_APP_KEY:-${WS_APP_ID:-pogo-app}}
+            REVERB_APP_SECRET: ${REVERB_APP_SECRET:-${WS_APP_SECRET:-super-secret-key}}
+            REVERB_HOST: ${REVERB_HOST:-127.0.0.1}
+            REVERB_PORT: 80
+            REVERB_SCHEME: ${REVERB_SCHEME:-http}
         ports:
             - '5173:5173'
         healthcheck:

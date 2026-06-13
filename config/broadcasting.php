@@ -1,5 +1,7 @@
 <?php
 
+$usesLocalBroadcastDefaults = in_array(env('APP_ENV'), ['local', 'testing'], true);
+
 return [
 
     /*
@@ -31,9 +33,9 @@ return [
     'connections' => [
         'reverb' => [
             'driver' => 'reverb',
-            'key' => env('REVERB_APP_KEY'),
-            'secret' => env('REVERB_APP_SECRET'),
-            'app_id' => env('REVERB_APP_ID'),
+            'key' => env('REVERB_APP_KEY') ?: ($usesLocalBroadcastDefaults ? 'pogo-app' : null),
+            'secret' => env('REVERB_APP_SECRET') ?: ($usesLocalBroadcastDefaults ? 'super-secret-key' : null),
+            'app_id' => env('REVERB_APP_ID') ?: ($usesLocalBroadcastDefaults ? 'pogo-app' : null),
             'options' => [
                 'host' => env('REVERB_HOST', '127.0.0.1'),
                 'port' => env('REVERB_PORT', 8080),
