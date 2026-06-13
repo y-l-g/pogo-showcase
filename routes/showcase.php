@@ -3,6 +3,7 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Showcase\CreateUploadIntentController;
+use App\Http\Controllers\Showcase\PingUploadPressureController;
 use App\Http\Controllers\Showcase\ResetQueueDemoController;
 use App\Http\Controllers\Showcase\RunPogoDemoController;
 use App\Http\Controllers\Showcase\RunQueueDemoController;
@@ -28,6 +29,7 @@ Route::middleware(['auth', 'verified', 'nossr'])->group(function (): void {
 
     Route::get('/upload', ShowUploadController::class)->name('showcase.upload');
     Route::post('/upload/raw', RunRawUploadController::class)->name('showcase.upload.raw');
+    Route::get('/upload/ping', PingUploadPressureController::class)->name('showcase.upload.ping');
     Route::post('/upload/pogo/intent', CreateUploadIntentController::class)->name('showcase.upload.intent');
     Route::get('/upload/pogo/{uploadId}', ShowUploadProgressController::class)
         ->where('uploadId', '[A-Za-z0-9_]+')

@@ -113,6 +113,16 @@ it('returns raw php upload results after streaming the request body', function (
     expect(file_exists(storage_path('app/upload-showcase/raw/'.$payload['key'])))->toBeTrue();
 });
 
+it('returns an authenticated upload pressure ping', function (): void {
+    $user = User::factory()->create();
+
+    actingAs($user)
+        ->getJson(route('showcase.upload.ping'))
+        ->assertOk()
+        ->assertJsonPath('ok', true)
+        ->assertJsonStructure(['checked_at']);
+});
+
 it('polls pogo progress and the cached completion event', function (): void {
     $user = User::factory()->create();
     $GLOBALS['pogo_upload_progress_payload'] = [
