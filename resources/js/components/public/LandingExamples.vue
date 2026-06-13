@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import CodeBlock from '@/components/public/CodeBlock.vue';
+import { upload } from '@/routes/showcase';
 import { useEchoPublic } from '@laravel/echo-vue';
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 
@@ -25,6 +26,12 @@ type ParallelResult = {
 };
 
 type QueueStatus = 'queued' | 'running' | 'completed';
+
+type UploadFlowStep = {
+    label: string;
+    detail: string;
+    owner: string;
+};
 
 const CHAT_HISTORY_LIMIT = 12;
 
@@ -57,6 +64,32 @@ let pulseTimer: ReturnType<typeof setInterval> | null = null;
 const parallel = ref<ParallelResult | null>(null);
 const parallelRunning = ref(false);
 const parallelError = ref<string | null>(null);
+
+const uploadFlowSteps: UploadFlowStep[] = [
+    {
+        label: 'Authorize intent',
+        detail: 'Laravel validates the user and returns a signed URL.',
+        owner: 'PHP control plane',
+    },
+    {
+        label: 'Stream file body',
+        detail: 'The browser sends the raw body to the Pogo upload handler.',
+        owner: 'Native ingress',
+    },
+    {
+        label: 'Store and checksum',
+        detail: 'Go enforces limits, writes storage, and computes SHA-256.',
+        owner: 'Native ingress',
+    },
+    {
+        label: 'Complete event',
+        detail: 'A PHP worker receives only the final metadata and checksum.',
+        owner: 'PHP event worker',
+    },
+];
+const uploadFlowIndex = ref(-1);
+const uploadFlowRunning = ref(false);
+const uploadFlowTimers: Array<ReturnType<typeof setTimeout>> = [];
 
 const queueJobs = ref([
     {
@@ -103,6 +136,17 @@ foreach ($tasks as $task) {
 }
 
 $results = array_map(fn ($h) => $pogo->await($h), $handles);`,
+    upload: `// Laravel controller
+$intent = pogo_upload_create([
+  'key' => "users/{$user->id}/uploads/avatar.jpg",
+  'content_types' => ['image/jpeg'],
+  'max_bytes' => 50 * 1024 * 1024,
+]);
+
+// Browser
+await fetch($intent['url'], { method: 'PUT', body: file });
+
+// public/upload-worker.php records the completion event.`,
     queue: `// Laravel
 dispatch(new QueueDemoJob($batchId, $jobId, 800, 'Send receipt'))
   ->onConnection('pogo')
@@ -274,6 +318,47 @@ const runParallel = async () => {
     }
 };
 
+const resetUploadFlow = () => {
+    uploadFlowTimers.splice(0).forEach((timer) => clearTimeout(timer));
+    uploadFlowRunning.value = false;
+    uploadFlowIndex.value = -1;
+};
+
+const runUploadFlow = () => {
+    resetUploadFlow();
+    uploadFlowRunning.value = true;
+    uploadFlowIndex.value = 0;
+
+    uploadFlowSteps.slice(1).forEach((_, index) => {
+        uploadFlowTimers.push(
+            setTimeout(
+                () => {
+                    uploadFlowIndex.value = index + 1;
+                },
+                650 + index * 650,
+            ),
+        );
+    });
+
+    uploadFlowTimers.push(
+        setTimeout(() => {
+            uploadFlowRunning.value = false;
+        }, 650 * uploadFlowSteps.length),
+    );
+};
+
+const uploadStepState = (index: number) => {
+    if (uploadFlowIndex.value < index) {
+        return 'pending';
+    }
+
+    if (uploadFlowIndex.value === index && uploadFlowRunning.value) {
+        return 'active';
+    }
+
+    return 'done';
+};
+
 const resetQueue = () => {
     queueTimers.splice(0).forEach((timer) => clearTimeout(timer));
     queueRunning.value = false;
@@ -316,6 +401,7 @@ const runQueue = () => {
 
 onBeforeUnmount(() => {
     stopPulse();
+    uploadFlowTimers.splice(0).forEach((timer) => clearTimeout(timer));
     queueTimers.splice(0).forEach((timer) => clearTimeout(timer));
 });
 </script>
@@ -418,6 +504,121 @@ onBeforeUnmount(() => {
                         :code="snippets.chat"
                         filename="Chat.vue + LandingChatMessage.php"
                         language="javascript"
+                    />
+                </div>
+            </section>
+
+            <section>
+                <div
+                    class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(20rem,0.82fr)] lg:items-stretch lg:gap-8"
+                >
+                    <div class="space-y-5">
+                        <div class="space-y-3">
+                            <div
+                                class="flex size-10 items-center justify-center rounded-lg bg-primary/10 text-primary"
+                            >
+                                <UIcon
+                                    name="i-lucide-hard-drive-upload"
+                                    class="size-5"
+                                />
+                            </div>
+                            <h2 class="text-2xl font-semibold">
+                                Upload pressure
+                            </h2>
+                            <p class="max-w-2xl text-muted">
+                                Keep Laravel in charge of authorization while
+                                Pogo receives the slow upload body outside the
+                                app worker pool.
+                            </p>
+                        </div>
+
+                        <div
+                            class="rounded-lg border border-default bg-default p-5"
+                        >
+                            <div
+                                class="mb-5 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
+                            >
+                                <div>
+                                    <p class="text-sm text-muted">
+                                        Upload path
+                                    </p>
+                                    <p class="font-semibold">
+                                        PHP control, native body stream
+                                    </p>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <UButton
+                                        :loading="uploadFlowRunning"
+                                        icon="i-lucide-play"
+                                        @click="runUploadFlow"
+                                    >
+                                        Play flow
+                                    </UButton>
+                                    <UButton
+                                        color="neutral"
+                                        variant="subtle"
+                                        icon="i-lucide-gauge"
+                                        :to="upload().url"
+                                    >
+                                        Open pressure test
+                                    </UButton>
+                                </div>
+                            </div>
+
+                            <div class="space-y-3">
+                                <div
+                                    v-for="(step, index) in uploadFlowSteps"
+                                    :key="step.label"
+                                    class="grid gap-3 rounded-lg border border-default p-3 sm:grid-cols-[2.5rem_1fr_auto] sm:items-center"
+                                    :class="
+                                        uploadStepState(index) === 'active'
+                                            ? 'bg-primary/10'
+                                            : uploadStepState(index) === 'done'
+                                              ? 'bg-muted/30'
+                                              : 'bg-default'
+                                    "
+                                >
+                                    <div
+                                        class="flex size-9 items-center justify-center rounded-full"
+                                        :class="
+                                            uploadStepState(index) === 'done'
+                                                ? 'bg-primary text-inverted'
+                                                : uploadStepState(index) ===
+                                                    'active'
+                                                  ? 'bg-primary/20 text-primary'
+                                                  : 'bg-muted text-muted'
+                                        "
+                                    >
+                                        <UIcon
+                                            :name="
+                                                uploadStepState(index) ===
+                                                'done'
+                                                    ? 'i-lucide-check'
+                                                    : 'i-lucide-dot'
+                                            "
+                                            class="size-4"
+                                        />
+                                    </div>
+                                    <div>
+                                        <p class="font-medium">
+                                            {{ step.label }}
+                                        </p>
+                                        <p class="text-sm text-muted">
+                                            {{ step.detail }}
+                                        </p>
+                                    </div>
+                                    <UBadge color="neutral" variant="subtle">
+                                        {{ step.owner }}
+                                    </UBadge>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <CodeBlock
+                        :code="snippets.upload"
+                        filename="CreateUploadIntentController.php"
+                        language="php"
                     />
                 </div>
             </section>

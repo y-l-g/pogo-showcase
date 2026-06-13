@@ -18,7 +18,7 @@ const props = defineProps<{
 useSeoMeta({
     title: 'Pogo Showcase',
     description:
-        'See concrete Pogo examples for FrankenPHP: realtime chat, parallel jobs, queue workers, and scheduler polling.',
+        'See concrete Pogo examples for FrankenPHP: realtime chat, parallel jobs, upload pressure isolation, queue workers, and scheduler polling.',
 });
 </script>
 
@@ -40,7 +40,7 @@ useSeoMeta({
                     description: 'mx-auto max-w-2xl',
                 }"
                 title="Pogo extensions for FrankenPHP"
-                description="Run realtime chat, parallel jobs, queues, and scheduler examples from one FrankenPHP application."
+                description="Run realtime chat, parallel jobs, upload pressure, queues, and scheduler examples from one FrankenPHP application."
             >
                 <template #links>
                     <motion.div
