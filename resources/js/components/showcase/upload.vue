@@ -502,10 +502,6 @@ async function runPogoPressureUpload(payload: Blob, filename: string) {
 
     recordAppWorkerTime(created);
 
-    if (!pollTimer) {
-        startPolling(created.upload_id);
-    }
-
     await sendPressureUpload(
         created.url,
         created.method ?? 'PUT',
@@ -517,6 +513,8 @@ async function runPogoPressureUpload(payload: Blob, filename: string) {
             pressure.value.bytesStreamed += bytes;
         },
     );
+
+    void refreshPressureStatus(created.upload_id);
 }
 
 function sendWithProgress(
@@ -745,6 +743,23 @@ async function pollUpload(uploadId: string) {
         }
     } catch {
         stopPolling();
+    }
+}
+
+async function refreshPressureStatus(uploadId: string) {
+    try {
+        const response = await fetch(progress(uploadId).url, {
+            headers: {
+                Accept: 'application/json',
+            },
+        });
+        const payload = (await response.json()) as {
+            status: UploadStatus;
+        };
+
+        liveStatus.value = payload.status;
+    } catch {
+        // Pressure metrics are still valid if the status refresh races completion.
     }
 }
 
