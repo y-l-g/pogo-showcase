@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { intent, progress, raw } from '@/routes/showcase/upload';
+import { intent, ping, progress, raw } from '@/routes/showcase/upload';
 import { computed, onBeforeUnmount, ref } from 'vue';
 
 type UploadStatus = {
@@ -62,6 +62,30 @@ type LaneState = {
     error: string | null;
 };
 
+type PressureMode = 'raw' | 'pogo';
+
+type PressurePing = {
+    id: number;
+    latencyMs: number;
+    ok: boolean;
+};
+
+type PressureState = {
+    running: boolean;
+    mode: PressureMode | null;
+    uploadsStarted: number;
+    uploadsCompleted: number;
+    uploadsFailed: number;
+    bytesStreamed: number;
+    pings: PressurePing[];
+    error: string | null;
+    summary: string | null;
+};
+
+type FetchInitWithDuplex = RequestInit & {
+    duplex: 'half';
+};
+
 const props = defineProps<{
     uploadAvailable: boolean;
     uploadStatus: UploadStatus;
@@ -72,14 +96,22 @@ const props = defineProps<{
 const file = ref<File | null>(null);
 const generatedPayload = ref<Blob | null>(null);
 const generatedSize = 2 * 1024 * 1024;
+const pressureUploadCount = 5;
+const pressurePayloadSize = 768 * 1024;
+const pressureChunkSize = 16 * 1024;
+const pressureChunkDelayMs = 40;
+const pressurePingIntervalMs = 350;
 const rawLane = ref<LaneState>(emptyLane());
 const pogoLane = ref<LaneState>(emptyLane());
+const pressure = ref<PressureState>(emptyPressure());
 const serverProgress = ref<UploadProgress | null>(null);
 const workerEvent = ref<UploadEvent | null>(null);
 const liveStatus = ref<UploadStatus>(props.uploadStatus);
 let pollTimer: number | null = null;
 let pollAttempts = 0;
 const maxPollAttempts = 45;
+let pressurePingTimer: number | null = null;
+let pressurePingId = 0;
 
 const csrfToken = () =>
     document
@@ -115,6 +147,34 @@ const sizeLabel = computed(() => formatBytes(selectedPayload.value.size));
 const payloadTooLarge = computed(
     () => selectedPayload.value.size > props.maxBytes,
 );
+const pressureAveragePing = computed(() => {
+    const pings = pressure.value.pings.filter((item) => item.ok);
+
+    if (pings.length === 0) {
+        return 0;
+    }
+
+    return Math.round(
+        pings.reduce((total, item) => total + item.latencyMs, 0) / pings.length,
+    );
+});
+const pressureSlowestPing = computed(() =>
+    Math.max(0, ...pressure.value.pings.map((item) => item.latencyMs)),
+);
+const pressureConfigLabel = computed(
+    () =>
+        `${pressureUploadCount} uploads x ${formatBytes(pressurePayloadSize)}`,
+);
+const pressureModeLabel = computed(() => {
+    if (pressure.value.mode === 'raw') {
+        return 'Raw PHP';
+    }
+    if (pressure.value.mode === 'pogo') {
+        return 'Pogo Upload';
+    }
+
+    return 'Not run yet';
+});
 
 const metricCards = computed(() => [
     {
@@ -149,11 +209,33 @@ function emptyLane(): LaneState {
     };
 }
 
+function emptyPressure(): PressureState {
+    return {
+        running: false,
+        mode: null,
+        uploadsStarted: 0,
+        uploadsCompleted: 0,
+        uploadsFailed: 0,
+        bytesStreamed: 0,
+        pings: [],
+        error: null,
+        summary: null,
+    };
+}
+
 function makeGeneratedPayload(): Blob {
+    return makeTextPayload(generatedSize);
+}
+
+function makePressurePayload(): Blob {
+    return makeTextPayload(pressurePayloadSize);
+}
+
+function makeTextPayload(size: number): Blob {
     const chunk = new TextEncoder().encode(
         'Pogo upload showcase payload. This text is repeated so the browser has a visible body to send.\n',
     );
-    const bytes = new Uint8Array(generatedSize);
+    const bytes = new Uint8Array(size);
 
     for (let offset = 0; offset < bytes.length; offset += chunk.length) {
         bytes.set(chunk.slice(0, bytes.length - offset), offset);
@@ -174,6 +256,11 @@ function resetLanes() {
     serverProgress.value = null;
     workerEvent.value = null;
     stopPolling();
+}
+
+function resetPressure() {
+    stopPressurePings();
+    pressure.value = emptyPressure();
 }
 
 async function runRawUpload() {
@@ -270,6 +357,117 @@ async function runPogoUpload() {
     }
 }
 
+async function runPressureTest(mode: PressureMode) {
+    if (pressure.value.running) {
+        return;
+    }
+
+    resetLanes();
+    resetPressure();
+
+    pressure.value.running = true;
+    pressure.value.mode = mode;
+    startPressurePings();
+
+    try {
+        const results = await Promise.allSettled(
+            Array.from({ length: pressureUploadCount }, (_, index) =>
+                runPressureUpload(mode, index + 1),
+            ),
+        );
+        const failures = results.filter(
+            (result) => result.status === 'rejected',
+        );
+
+        if (failures.length > 0 && !pressure.value.error) {
+            pressure.value.error = `${failures.length} pressure upload failed.`;
+        }
+
+        pressure.value.summary =
+            mode === 'raw'
+                ? 'Raw uploads used normal Laravel request workers while pings were running.'
+                : 'Pogo uploads streamed through the native handler while Laravel only handled intents and pings.';
+    } catch (error) {
+        pressure.value.error =
+            error instanceof Error ? error.message : 'Pressure test failed.';
+    } finally {
+        stopPressurePings();
+        pressure.value.running = false;
+    }
+}
+
+async function runPressureUpload(mode: PressureMode, index: number) {
+    pressure.value.uploadsStarted += 1;
+
+    try {
+        const payload = makePressurePayload();
+        const filename = `pressure-${mode}-${index}.txt`;
+
+        if (mode === 'raw') {
+            await sendStreamingUpload(
+                raw().url,
+                'POST',
+                payload,
+                {
+                    'Content-Type': 'text/plain',
+                    'X-CSRF-TOKEN': csrfToken(),
+                    'X-Upload-Filename': filename,
+                },
+                (bytes) => {
+                    pressure.value.bytesStreamed += bytes;
+                },
+            );
+        } else {
+            await runPogoPressureUpload(payload, filename);
+        }
+
+        pressure.value.uploadsCompleted += 1;
+    } catch (error) {
+        pressure.value.uploadsFailed += 1;
+        pressure.value.error =
+            error instanceof Error ? error.message : 'Pressure upload failed.';
+
+        throw error;
+    }
+}
+
+async function runPogoPressureUpload(payload: Blob, filename: string) {
+    const intentResponse = await fetch(intent().url, {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': csrfToken(),
+        },
+        body: JSON.stringify({
+            filename,
+            content_type: 'text/plain',
+            size: payload.size,
+        }),
+    });
+    const created = (await intentResponse.json()) as UploadResult;
+
+    if (!intentResponse.ok || !created.upload_id || !created.url) {
+        throw new Error(errorMessage(created.error));
+    }
+
+    if (!pollTimer) {
+        startPolling(created.upload_id);
+    }
+
+    await sendStreamingUpload(
+        created.url,
+        created.method ?? 'PUT',
+        payload,
+        {
+            'Content-Type': created.headers?.['content-type'] ?? 'text/plain',
+        },
+        (bytes) => {
+            pressure.value.bytesStreamed += bytes;
+        },
+    );
+}
+
 function sendWithProgress(
     url: string,
     method: string,
@@ -306,8 +504,8 @@ function sendWithProgress(
             }
 
             resolve({
-                ok: false,
                 ...response,
+                ok: false,
                 error: response.error ?? {
                     code: 'http_error',
                     message: `HTTP ${xhr.status}`,
@@ -319,11 +517,130 @@ function sendWithProgress(
     });
 }
 
+async function sendStreamingUpload(
+    url: string,
+    method: string,
+    body: Blob,
+    headers: Record<string, string>,
+    onBytes: (bytes: number) => void,
+): Promise<UploadResult> {
+    const response = await fetch(url, {
+        method,
+        credentials: 'same-origin',
+        headers: {
+            Accept: 'application/json',
+            ...headers,
+        },
+        body: makeThrottledBody(body, onBytes),
+        duplex: 'half',
+    } as FetchInitWithDuplex);
+    const payload = await readUploadResponse(response);
+
+    if (response.ok && payload.ok !== false) {
+        return payload;
+    }
+
+    throw new Error(
+        errorMessage(
+            payload.error ?? {
+                code: 'http_error',
+                message: `HTTP ${response.status}`,
+            },
+        ),
+    );
+}
+
+function makeThrottledBody(
+    body: Blob,
+    onBytes: (bytes: number) => void,
+): ReadableStream<Uint8Array> {
+    let offset = 0;
+
+    return new ReadableStream<Uint8Array>({
+        async pull(controller) {
+            if (offset >= body.size) {
+                controller.close();
+                return;
+            }
+
+            const nextOffset = Math.min(offset + pressureChunkSize, body.size);
+            const buffer = await body.slice(offset, nextOffset).arrayBuffer();
+
+            await sleep(pressureChunkDelayMs);
+
+            offset = nextOffset;
+            onBytes(buffer.byteLength);
+            controller.enqueue(new Uint8Array(buffer));
+        },
+    });
+}
+
+async function readUploadResponse(response: Response): Promise<UploadResult> {
+    try {
+        return (await response.json()) as UploadResult;
+    } catch {
+        return { ok: false };
+    }
+}
+
+function sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
 function parseJson(value: string): UploadResult {
     try {
         return JSON.parse(value) as UploadResult;
     } catch {
         return { ok: false };
+    }
+}
+
+function startPressurePings() {
+    stopPressurePings();
+    pressurePingId = 0;
+    void recordPressurePing();
+    pressurePingTimer = window.setInterval(
+        () => void recordPressurePing(),
+        pressurePingIntervalMs,
+    );
+}
+
+async function recordPressurePing() {
+    const startedAt = performance.now();
+    const id = ++pressurePingId;
+
+    try {
+        await fetch(ping().url, {
+            headers: {
+                Accept: 'application/json',
+            },
+            cache: 'no-store',
+        });
+
+        pressure.value.pings = [
+            ...pressure.value.pings.slice(-11),
+            {
+                id,
+                latencyMs: Math.round(performance.now() - startedAt),
+                ok: true,
+            },
+        ];
+    } catch {
+        pressure.value.pings = [
+            ...pressure.value.pings.slice(-11),
+            {
+                id,
+                latencyMs: Math.round(performance.now() - startedAt),
+                ok: false,
+            },
+        ];
+    }
+}
+
+function stopPressurePings() {
+    if (pressurePingTimer !== null) {
+        window.clearInterval(pressurePingTimer);
+        pressurePingTimer = null;
     }
 }
 
@@ -399,6 +716,7 @@ function formatBytes(value?: number | null): string {
 }
 
 onBeforeUnmount(stopPolling);
+onBeforeUnmount(stopPressurePings);
 </script>
 
 <template>
@@ -486,6 +804,165 @@ onBeforeUnmount(stopPolling);
             title="The useful signal is app responsiveness under upload pressure"
             description="The single-file flow below proves both paths work. The pressure test shows why moving upload bodies out of Laravel workers matters."
         />
+
+        <section class="rounded-lg border border-default bg-elevated/30 p-4">
+            <div
+                class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between"
+            >
+                <div>
+                    <div class="mb-2 flex flex-wrap gap-2">
+                        <UBadge color="primary" variant="subtle">
+                            Pressure test
+                        </UBadge>
+                        <UBadge color="neutral" variant="subtle">
+                            {{ pressureConfigLabel }}
+                        </UBadge>
+                    </div>
+                    <h2 class="font-semibold">
+                        Ping Laravel while uploads are streaming
+                    </h2>
+                    <p class="mt-1 max-w-3xl text-sm text-muted">
+                        Each run starts throttled upload streams and probes a
+                        normal Laravel route during the upload. Raw PHP keeps
+                        app workers occupied; Pogo keeps the body stream in the
+                        native handler.
+                    </p>
+                </div>
+
+                <div class="flex flex-wrap gap-2">
+                    <UButton
+                        icon="i-lucide-server"
+                        :loading="pressure.running && pressure.mode === 'raw'"
+                        :disabled="pressure.running"
+                        @click="runPressureTest('raw')"
+                    >
+                        Run raw pressure
+                    </UButton>
+                    <UButton
+                        color="neutral"
+                        variant="subtle"
+                        icon="i-lucide-gauge"
+                        :loading="pressure.running && pressure.mode === 'pogo'"
+                        :disabled="pressure.running || !uploadAvailable"
+                        @click="runPressureTest('pogo')"
+                    >
+                        Run Pogo pressure
+                    </UButton>
+                    <UButton
+                        color="neutral"
+                        variant="ghost"
+                        icon="i-lucide-rotate-ccw"
+                        :disabled="pressure.running"
+                        @click="resetPressure"
+                    >
+                        Reset
+                    </UButton>
+                </div>
+            </div>
+
+            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+                <div class="rounded-lg border border-default bg-default p-4">
+                    <p class="text-xs text-muted">Mode</p>
+                    <p class="mt-1 font-semibold">{{ pressureModeLabel }}</p>
+                </div>
+                <div class="rounded-lg border border-default bg-default p-4">
+                    <p class="text-xs text-muted">Uploads</p>
+                    <p class="mt-1 font-semibold">
+                        {{ pressure.uploadsCompleted }}/{{
+                            pressureUploadCount
+                        }}
+                        <span
+                            v-if="pressure.uploadsFailed > 0"
+                            class="text-error"
+                        >
+                            failed {{ pressure.uploadsFailed }}
+                        </span>
+                    </p>
+                </div>
+                <div class="rounded-lg border border-default bg-default p-4">
+                    <p class="text-xs text-muted">Streamed</p>
+                    <p class="mt-1 font-semibold">
+                        {{ formatBytes(pressure.bytesStreamed) }}
+                    </p>
+                </div>
+                <div class="rounded-lg border border-default bg-default p-4">
+                    <p class="text-xs text-muted">Average ping</p>
+                    <p class="mt-1 font-semibold">
+                        {{
+                            pressureAveragePing > 0
+                                ? `${pressureAveragePing}ms`
+                                : 'waiting'
+                        }}
+                    </p>
+                </div>
+                <div class="rounded-lg border border-default bg-default p-4">
+                    <p class="text-xs text-muted">Slowest ping</p>
+                    <p class="mt-1 font-semibold">
+                        {{
+                            pressureSlowestPing > 0
+                                ? `${pressureSlowestPing}ms`
+                                : 'waiting'
+                        }}
+                    </p>
+                </div>
+            </div>
+
+            <div
+                v-if="pressure.pings.length > 0"
+                class="mt-4 rounded-lg border border-default bg-default p-4"
+            >
+                <div class="mb-3 flex items-center justify-between gap-3">
+                    <p class="text-sm font-medium">Recent app pings</p>
+                    <p class="text-xs text-muted">
+                        {{ pressurePingIntervalMs }}ms interval
+                    </p>
+                </div>
+                <div class="space-y-2">
+                    <div
+                        v-for="item in pressure.pings"
+                        :key="item.id"
+                        class="grid grid-cols-[4rem_1fr] items-center gap-3"
+                    >
+                        <p
+                            class="text-xs"
+                            :class="item.ok ? 'text-muted' : 'text-error'"
+                        >
+                            {{ item.ok ? `${item.latencyMs}ms` : 'failed' }}
+                        </p>
+                        <div class="h-2 overflow-hidden rounded-full bg-muted">
+                            <div
+                                class="h-full rounded-full"
+                                :class="item.ok ? 'bg-primary' : 'bg-error'"
+                                :style="{
+                                    width: `${Math.min(
+                                        100,
+                                        Math.max(8, item.latencyMs / 8),
+                                    )}%`,
+                                }"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <UAlert
+                v-if="pressure.summary"
+                class="mt-4"
+                color="success"
+                variant="subtle"
+                icon="i-lucide-circle-check"
+                :title="pressure.summary"
+            />
+
+            <UAlert
+                v-if="pressure.error"
+                class="mt-4"
+                color="error"
+                variant="subtle"
+                icon="i-lucide-circle-alert"
+                :title="pressure.error"
+            />
+        </section>
 
         <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
             <div
