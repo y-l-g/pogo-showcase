@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import CodeBlock from '@/components/public/CodeBlock.vue';
-import { upload } from '@/routes/showcase';
 import { useEchoPublic } from '@laravel/echo-vue';
 import { computed, onBeforeUnmount, reactive, ref } from 'vue';
 
@@ -67,24 +66,19 @@ const parallelError = ref<string | null>(null);
 
 const uploadFlowSteps: UploadFlowStep[] = [
     {
-        label: 'Authorize intent',
-        detail: 'Laravel validates the user and returns a signed URL.',
-        owner: 'PHP control plane',
+        label: 'Authorize',
+        detail: 'Laravel validates the user and signs a short-lived upload intent.',
+        owner: 'Laravel',
     },
     {
-        label: 'Stream file body',
-        detail: 'The browser sends the raw body to the Pogo upload handler.',
-        owner: 'Native ingress',
+        label: 'Receive',
+        detail: 'Pogo receives the body, enforces limits, stores bytes, and computes the checksum.',
+        owner: 'Native handler',
     },
     {
-        label: 'Store and checksum',
-        detail: 'Go enforces limits, writes storage, and computes SHA-256.',
-        owner: 'Native ingress',
-    },
-    {
-        label: 'Complete event',
-        detail: 'A PHP worker receives only the final metadata and checksum.',
-        owner: 'PHP event worker',
+        label: 'Report',
+        detail: 'Laravel receives the completion event after the body has already been handled.',
+        owner: 'Laravel event',
     },
 ];
 const uploadFlowIndex = ref(-1);
@@ -151,20 +145,23 @@ $results = array_map(
     fn ($h) => $pogo->await($h),
     $handles,
 );`,
-    upload: `// Laravel controller
+    upload: `// Laravel authorizes the upload
 $intent = pogo_upload_create([
   'key' => "users/{$user->id}/uploads/avatar.jpg",
   'content_types' => ['image/jpeg'],
   'max_bytes' => 50 * 1024 * 1024,
 ]);
 
-// Browser
+return $intent;
+
+// Browser streams to the native handler
 await fetch($intent['url'], {
   method: 'PUT',
   body: file,
 });
 
-// public/upload-worker.php records the completion event.`,
+// public/upload-worker.php records the completion event
+// with bytes, checksum, and final storage key.`,
     queue: `// Laravel
 dispatch(new QueueDemoJob(
     $batchId,
@@ -546,12 +543,13 @@ onBeforeUnmount(() => {
                                 />
                             </div>
                             <h2 class="text-2xl font-semibold">
-                                Upload pressure
+                                Upload pressure isolation
                             </h2>
                             <p class="max-w-2xl text-muted">
-                                Keep Laravel in charge of authorization while
-                                Pogo receives the slow upload body outside the
-                                app worker pool.
+                                Laravel should authorize uploads, not spend HTTP
+                                worker time receiving slow bodies. Pogo moves
+                                the body stream, limits, checksum, and storage
+                                into the native handler.
                             </p>
                         </div>
 
@@ -566,26 +564,16 @@ onBeforeUnmount(() => {
                                         Upload path
                                     </p>
                                     <p class="font-semibold">
-                                        PHP control, native body stream
+                                        Laravel control, native body stream
                                     </p>
                                 </div>
-                                <div class="flex flex-wrap gap-2">
-                                    <UButton
-                                        :loading="uploadFlowRunning"
-                                        icon="i-lucide-play"
-                                        @click="runUploadFlow"
-                                    >
-                                        Play flow
-                                    </UButton>
-                                    <UButton
-                                        color="neutral"
-                                        variant="subtle"
-                                        icon="i-lucide-gauge"
-                                        :to="upload().url"
-                                    >
-                                        Open pressure test
-                                    </UButton>
-                                </div>
+                                <UButton
+                                    :loading="uploadFlowRunning"
+                                    icon="i-lucide-play"
+                                    @click="runUploadFlow"
+                                >
+                                    Play flow
+                                </UButton>
                             </div>
 
                             <div class="space-y-3">
@@ -633,6 +621,31 @@ onBeforeUnmount(() => {
                                     <UBadge color="neutral" variant="subtle">
                                         {{ step.owner }}
                                     </UBadge>
+                                </div>
+                            </div>
+
+                            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                                <div
+                                    class="rounded-lg border border-default bg-muted/30 p-4"
+                                >
+                                    <p class="text-sm font-medium">Raw PHP</p>
+                                    <p class="mt-1 text-sm text-muted">
+                                        Laravel HTTP workers receive upload
+                                        bodies, so worker time grows with every
+                                        slow client.
+                                    </p>
+                                </div>
+                                <div
+                                    class="rounded-lg border border-primary/40 bg-primary/5 p-4"
+                                >
+                                    <p class="text-sm font-medium">
+                                        Pogo Upload
+                                    </p>
+                                    <p class="mt-1 text-sm text-muted">
+                                        Laravel signs the intent, while Pogo
+                                        receives the body and reports completion
+                                        afterward.
+                                    </p>
                                 </div>
                             </div>
                         </div>
