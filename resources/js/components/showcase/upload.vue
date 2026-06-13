@@ -45,6 +45,7 @@ type UploadResult = {
     bytes?: number;
     sha256?: string;
     elapsed_ms?: number;
+    php_elapsed_ms?: number;
     php_handled_body?: boolean;
     upload_id?: string;
     method?: string;
@@ -77,9 +78,20 @@ type PressureState = {
     uploadsCompleted: number;
     uploadsFailed: number;
     bytesStreamed: number;
+    appWorkerMs: number;
     pings: PressurePing[];
     error: string | null;
     summary: string | null;
+};
+
+type PressureSnapshot = {
+    mode: PressureMode;
+    uploadsCompleted: number;
+    uploadsFailed: number;
+    bytesStreamed: number;
+    appWorkerMs: number;
+    averagePingMs: number;
+    slowestPingMs: number;
 };
 
 const props = defineProps<{
@@ -99,6 +111,10 @@ const pressurePingIntervalMs = 350;
 const rawLane = ref<LaneState>(emptyLane());
 const pogoLane = ref<LaneState>(emptyLane());
 const pressure = ref<PressureState>(emptyPressure());
+const pressureSnapshots = ref<Record<PressureMode, PressureSnapshot | null>>({
+    raw: null,
+    pogo: null,
+});
 const serverProgress = ref<UploadProgress | null>(null);
 const workerEvent = ref<UploadEvent | null>(null);
 const liveStatus = ref<UploadStatus>(props.uploadStatus);
@@ -160,22 +176,17 @@ const payloadTooLarge = computed(
     () => selectedPayload.value.size > props.maxBytes,
 );
 const pressureAveragePing = computed(() => {
-    const pings = pressure.value.pings.filter((item) => item.ok);
-
-    if (pings.length === 0) {
-        return 0;
-    }
-
-    return Math.round(
-        pings.reduce((total, item) => total + item.latencyMs, 0) / pings.length,
-    );
+    return averagePingMs(pressure.value.pings);
 });
-const pressureSlowestPing = computed(() =>
-    Math.max(0, ...pressure.value.pings.map((item) => item.latencyMs)),
-);
+const pressureSlowestPing = computed(() => slowestPingMs(pressure.value.pings));
 const pressureConfigLabel = computed(
     () =>
         `${pressureUploadCount} uploads x ${formatBytes(pressurePayloadSize)}`,
+);
+const pressureSnapshotRows = computed(() =>
+    [pressureSnapshots.value.raw, pressureSnapshots.value.pogo].filter(
+        (snapshot): snapshot is PressureSnapshot => snapshot !== null,
+    ),
 );
 const pressureModeLabel = computed(() => {
     if (pressure.value.mode === 'raw') {
@@ -229,6 +240,7 @@ function emptyPressure(): PressureState {
         uploadsCompleted: 0,
         uploadsFailed: 0,
         bytesStreamed: 0,
+        appWorkerMs: 0,
         pings: [],
         error: null,
         summary: null,
@@ -270,9 +282,17 @@ function resetLanes() {
     stopPolling();
 }
 
-function resetPressure() {
+function resetCurrentPressure() {
     stopPressurePings();
     pressure.value = emptyPressure();
+}
+
+function resetPressure() {
+    resetCurrentPressure();
+    pressureSnapshots.value = {
+        raw: null,
+        pogo: null,
+    };
 }
 
 async function runRawUpload() {
@@ -375,7 +395,7 @@ async function runPressureTest(mode: PressureMode) {
     }
 
     resetLanes();
-    resetPressure();
+    resetCurrentPressure();
 
     pressure.value.running = true;
     pressure.value.mode = mode;
@@ -395,11 +415,24 @@ async function runPressureTest(mode: PressureMode) {
             pressure.value.error = `${failures.length} pressure upload failed.`;
         }
 
+        pressureSnapshots.value = {
+            ...pressureSnapshots.value,
+            [mode]: {
+                mode,
+                uploadsCompleted: pressure.value.uploadsCompleted,
+                uploadsFailed: pressure.value.uploadsFailed,
+                bytesStreamed: pressure.value.bytesStreamed,
+                appWorkerMs: pressure.value.appWorkerMs,
+                averagePingMs: averagePingMs(pressure.value.pings),
+                slowestPingMs: slowestPingMs(pressure.value.pings),
+            },
+        };
+
         pressure.value.summary =
             failures.length === 0
                 ? mode === 'raw'
-                    ? 'Raw uploads used normal Laravel request workers while pings were running.'
-                    : 'Pogo uploads streamed through the native handler while Laravel only handled intents and pings.'
+                    ? `Raw uploads spent ${formatDuration(pressure.value.appWorkerMs)} inside Laravel HTTP workers receiving bodies.`
+                    : `Pogo spent ${formatDuration(pressure.value.appWorkerMs)} in Laravel intent routes; upload bodies stayed in the native handler.`
                 : null;
     } catch (error) {
         pressure.value.error =
@@ -418,7 +451,7 @@ async function runPressureUpload(mode: PressureMode, index: number) {
         const filename = `pressure-${mode}-${index}.txt`;
 
         if (mode === 'raw') {
-            await sendPressureUpload(
+            const result = await sendPressureUpload(
                 raw().url,
                 'POST',
                 payload,
@@ -432,6 +465,7 @@ async function runPressureUpload(mode: PressureMode, index: number) {
                     pressure.value.bytesStreamed += bytes;
                 },
             );
+            recordAppWorkerTime(result);
         } else {
             await runPogoPressureUpload(payload, filename);
         }
@@ -465,6 +499,8 @@ async function runPogoPressureUpload(payload: Blob, filename: string) {
     if (!intentResponse.ok || !created.upload_id || !created.url) {
         throw new Error(errorMessage(created.error));
     }
+
+    recordAppWorkerTime(created);
 
     if (!pollTimer) {
         startPolling(created.upload_id);
@@ -600,6 +636,28 @@ function parseJson(value: string): UploadResult {
     }
 }
 
+function recordAppWorkerTime(result: UploadResult) {
+    pressure.value.appWorkerMs +=
+        result.php_elapsed_ms ?? result.elapsed_ms ?? 0;
+}
+
+function averagePingMs(pings: PressurePing[]): number {
+    const successful = pings.filter((item) => item.ok);
+
+    if (successful.length === 0) {
+        return 0;
+    }
+
+    return Math.round(
+        successful.reduce((total, item) => total + item.latencyMs, 0) /
+            successful.length,
+    );
+}
+
+function slowestPingMs(pings: PressurePing[]): number {
+    return Math.max(0, ...pings.map((item) => item.latencyMs));
+}
+
 function startPressurePings() {
     stopPressurePings();
     pressurePingId = 0;
@@ -720,6 +778,20 @@ function formatBytes(value?: number | null): string {
     return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
 
+function formatDuration(value?: number | null): string {
+    const ms = value ?? 0;
+
+    if (ms < 1000) {
+        return `${Math.round(ms)}ms`;
+    }
+
+    return `${(ms / 1000).toFixed(ms < 10000 ? 1 : 0)}s`;
+}
+
+function pressureOwnerLabel(mode: PressureMode): string {
+    return mode === 'raw' ? 'Laravel receives bodies' : 'Pogo receives bodies';
+}
+
 onBeforeUnmount(stopPolling);
 onBeforeUnmount(stopPressurePings);
 </script>
@@ -806,8 +878,8 @@ onBeforeUnmount(stopPressurePings);
             color="info"
             variant="subtle"
             icon="i-lucide-gauge"
-            title="The useful signal is app responsiveness under upload pressure"
-            description="The single-file flow below proves both paths work. The pressure test shows why moving upload bodies out of Laravel workers matters."
+            title="The useful signal is Laravel worker time, not upload speed"
+            description="The pressure test records how much HTTP-worker time Laravel spends on upload requests. Ping latency is secondary and may stay low when the local worker pool still has spare capacity."
         />
 
         <section class="rounded-lg border border-default bg-elevated/30 p-4">
@@ -824,13 +896,13 @@ onBeforeUnmount(stopPressurePings);
                         </UBadge>
                     </div>
                     <h2 class="font-semibold">
-                        Ping Laravel while uploads are streaming
+                        Compare PHP time spent on upload bodies
                     </h2>
                     <p class="mt-1 max-w-3xl text-sm text-muted">
                         Each run starts concurrent uploads and probes a normal
-                        Laravel route during the upload. Raw PHP adds a small
-                        per-chunk delay to make worker pressure visible; Pogo
-                        keeps the body stream in the native handler.
+                        Laravel route during the upload. Raw PHP receives the
+                        bodies in HTTP workers; Pogo keeps those bodies in the
+                        native upload handler after a short Laravel intent.
                     </p>
                 </div>
 
@@ -865,7 +937,7 @@ onBeforeUnmount(stopPressurePings);
                 </div>
             </div>
 
-            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            <div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
                 <div class="rounded-lg border border-default bg-default p-4">
                     <p class="text-xs text-muted">Mode</p>
                     <p class="mt-1 font-semibold">{{ pressureModeLabel }}</p>
@@ -882,6 +954,18 @@ onBeforeUnmount(stopPressurePings);
                         >
                             failed {{ pressure.uploadsFailed }}
                         </span>
+                    </p>
+                </div>
+                <div
+                    class="rounded-lg border border-primary/40 bg-primary/5 p-4"
+                >
+                    <p class="text-xs text-muted">Laravel HTTP time</p>
+                    <p class="mt-1 font-semibold">
+                        {{
+                            pressure.appWorkerMs > 0
+                                ? formatDuration(pressure.appWorkerMs)
+                                : 'waiting'
+                        }}
                     </p>
                 </div>
                 <div class="rounded-lg border border-default bg-default p-4">
@@ -909,6 +993,77 @@ onBeforeUnmount(stopPressurePings);
                                 : 'waiting'
                         }}
                     </p>
+                </div>
+            </div>
+
+            <div
+                v-if="pressureSnapshotRows.length > 0"
+                class="mt-4 grid gap-3 lg:grid-cols-2"
+            >
+                <div
+                    v-for="snapshot in pressureSnapshotRows"
+                    :key="snapshot.mode"
+                    class="rounded-lg border border-default bg-default p-4"
+                >
+                    <div class="mb-3 flex items-center justify-between gap-3">
+                        <div>
+                            <p class="text-sm font-medium">
+                                {{
+                                    snapshot.mode === 'raw'
+                                        ? 'Raw PHP result'
+                                        : 'Pogo Upload result'
+                                }}
+                            </p>
+                            <p class="text-xs text-muted">
+                                {{ pressureOwnerLabel(snapshot.mode) }}
+                            </p>
+                        </div>
+                        <UBadge
+                            :color="
+                                snapshot.mode === 'raw' ? 'neutral' : 'primary'
+                            "
+                            variant="subtle"
+                        >
+                            {{ snapshot.uploadsCompleted }}/{{
+                                pressureUploadCount
+                            }}
+                        </UBadge>
+                    </div>
+
+                    <div class="grid gap-3 sm:grid-cols-2">
+                        <div>
+                            <p class="text-xs text-muted">Laravel HTTP time</p>
+                            <p class="font-semibold">
+                                {{ formatDuration(snapshot.appWorkerMs) }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted">Average ping</p>
+                            <p class="font-semibold">
+                                {{
+                                    snapshot.averagePingMs > 0
+                                        ? `${snapshot.averagePingMs}ms`
+                                        : 'none'
+                                }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted">Streamed</p>
+                            <p class="font-semibold">
+                                {{ formatBytes(snapshot.bytesStreamed) }}
+                            </p>
+                        </div>
+                        <div>
+                            <p class="text-xs text-muted">Slowest ping</p>
+                            <p class="font-semibold">
+                                {{
+                                    snapshot.slowestPingMs > 0
+                                        ? `${snapshot.slowestPingMs}ms`
+                                        : 'none'
+                                }}
+                            </p>
+                        </div>
+                    </div>
                 </div>
             </div>
 

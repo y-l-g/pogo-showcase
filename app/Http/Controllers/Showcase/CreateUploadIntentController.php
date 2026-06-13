@@ -16,6 +16,8 @@ final class CreateUploadIntentController extends Controller
 {
     public function __invoke(Request $request, UploadShowcase $uploads): JsonResponse
     {
+        $startedAt = hrtime(true);
+
         $validated = $request->validate([
             'filename' => ['required', 'string', 'max:160'],
             'content_type' => ['required', 'string', Rule::in(UploadShowcase::acceptedContentTypes())],
@@ -27,12 +29,16 @@ final class CreateUploadIntentController extends Controller
         }
 
         try {
-            return response()->json($uploads->createIntent(
+            $intent = $uploads->createIntent(
                 $request->user(),
                 (string) $validated['filename'],
                 (string) $validated['content_type'],
                 (int) $validated['size'],
-            ));
+            );
+
+            $intent['php_elapsed_ms'] = (int) round((hrtime(true) - $startedAt) / 1_000_000);
+
+            return response()->json($intent);
         } catch (RuntimeException $e) {
             return response()->json([
                 'ok' => false,

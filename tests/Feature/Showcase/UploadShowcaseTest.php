@@ -56,7 +56,8 @@ it('creates a signed pogo upload intent for the authenticated user', function ()
         ->assertOk()
         ->assertJsonPath('upload_id', 'upl_test')
         ->assertJsonPath('method', 'PUT')
-        ->assertJsonPath('url', '/_pogo/upload/test-token');
+        ->assertJsonPath('url', '/_pogo/upload/test-token')
+        ->assertJsonStructure(['php_elapsed_ms']);
 
     expect($GLOBALS['pogo_upload_create_calls'])->toHaveCount(1);
 
@@ -106,7 +107,8 @@ it('returns raw php upload results after streaming the request body', function (
         ->assertJsonPath('filename', 'raw-demo.txt')
         ->assertJsonPath('bytes', 12)
         ->assertJsonPath('sha256', hash('sha256', 'hello upload'))
-        ->assertJsonPath('php_handled_body', true);
+        ->assertJsonPath('php_handled_body', true)
+        ->assertJsonStructure(['php_elapsed_ms']);
 
     $payload = $response->json();
 

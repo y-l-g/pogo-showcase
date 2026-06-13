@@ -79,6 +79,8 @@ final class RunRawUploadController extends Controller
 
         rename($tmp, $target);
 
+        $elapsedMs = (int) round((hrtime(true) - $startedAt) / 1_000_000);
+
         return response()->json([
             'ok' => true,
             'mode' => 'raw_php',
@@ -87,7 +89,8 @@ final class RunRawUploadController extends Controller
             'content_type' => $contentType,
             'bytes' => $bytes,
             'sha256' => hash_final($hash),
-            'elapsed_ms' => (int) round((hrtime(true) - $startedAt) / 1_000_000),
+            'elapsed_ms' => $elapsedMs,
+            'php_elapsed_ms' => $elapsedMs,
             'php_handled_body' => true,
         ]);
     }
