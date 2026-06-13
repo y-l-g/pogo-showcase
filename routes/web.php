@@ -9,7 +9,9 @@ use App\Http\Controllers\Public\WelcomeController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', WelcomeController::class)->name('home');
-Route::post('/examples/chat/message', SendLandingChatMessageController::class)->name('examples.chat.message');
+Route::post('/examples/chat/message', SendLandingChatMessageController::class)
+    ->middleware('throttle:20,1')
+    ->name('examples.chat.message');
 Route::get('/examples/pulse', LandingPulseController::class)->name('examples.pulse');
 Route::post('/examples/parallel', LandingParallelController::class)->name('examples.parallel');
 

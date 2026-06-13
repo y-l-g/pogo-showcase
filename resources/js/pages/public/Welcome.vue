@@ -4,6 +4,17 @@ import PublicLayout from '@/layouts/PublicLayout.vue';
 import { register } from '@/routes';
 import { motion } from 'motion-v';
 
+type LandingChatMessage = {
+    id: string;
+    name: string;
+    content: string;
+    timestamp: string;
+};
+
+const props = defineProps<{
+    landingChatMessages: LandingChatMessage[];
+}>();
+
 useSeoMeta({
     title: 'Pogo Showcase',
     description:
@@ -67,6 +78,6 @@ useSeoMeta({
             </UPageHero>
         </motion.div>
 
-        <LandingExamples />
+        <LandingExamples :initial-chat-messages="props.landingChatMessages" />
     </PublicLayout>
 </template>

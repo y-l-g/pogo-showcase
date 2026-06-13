@@ -26,21 +26,24 @@ type ParallelResult = {
 
 type QueueStatus = 'queued' | 'running' | 'completed';
 
+const CHAT_HISTORY_LIMIT = 12;
+
 const chatForm = reactive({
     name: 'Visitor',
     content: 'Hello from the landing page',
 });
-const chatMessages = ref<LandingChatMessage[]>([
+const props = withDefaults(
+    defineProps<{
+        initialChatMessages?: LandingChatMessage[];
+    }>(),
     {
-        id: 'demo-message',
-        name: 'Pogo',
-        content:
-            'Send a message. If websockets are running, other visitors receive it.',
-        timestamp: new Date().toISOString(),
+        initialChatMessages: () => [],
     },
-]);
+);
+const chatMessages = ref<LandingChatMessage[]>(props.initialChatMessages);
 const chatSending = ref(false);
 const chatBroadcasted = ref<boolean | null>(null);
+const chatError = ref<string | null>(null);
 
 const pulse = ref({
     count: 0,
@@ -84,6 +87,7 @@ useEchoPublic('landing.chat', '.message.sent', addChatMessage)
 await fetch('/examples/chat/message', { method: 'POST', body })
 
 // Laravel
+$chat->record($message);
 event(new LandingChatMessage($message));`,
     pulse: `// Vue
 setInterval(async () => {
@@ -122,12 +126,14 @@ const queueColumns = computed(() =>
 
 const chatStatus = computed(() => {
     if (chatBroadcasted.value === null) {
-        return 'Local message list is ready.';
+        return chatMessages.value.length > 0
+            ? 'Showing recent public messages.'
+            : 'No public messages yet.';
     }
 
     return chatBroadcasted.value
         ? 'Broadcast sent on landing.chat.'
-        : 'Saved locally. Start the Pogo websocket server to broadcast.';
+        : 'Message saved. Start the Pogo websocket server to broadcast live.';
 });
 
 if (typeof window !== 'undefined') {
@@ -186,7 +192,10 @@ const addChatMessage = (message: LandingChatMessage) => {
         return;
     }
 
-    chatMessages.value = [...chatMessages.value.slice(-3), message];
+    chatMessages.value = [
+        ...chatMessages.value.slice(-(CHAT_HISTORY_LIMIT - 1)),
+        message,
+    ];
 };
 
 const sendChatMessage = async () => {
@@ -195,6 +204,7 @@ const sendChatMessage = async () => {
     }
 
     chatSending.value = true;
+    chatError.value = null;
 
     try {
         const payload = await postJson<{
@@ -208,6 +218,9 @@ const sendChatMessage = async () => {
         chatBroadcasted.value = payload.broadcasted;
         addChatMessage(payload.message);
         chatForm.content = '';
+    } catch (error) {
+        chatError.value =
+            error instanceof Error ? error.message : 'Chat message failed.';
     } finally {
         chatSending.value = false;
     }
@@ -342,7 +355,13 @@ onBeforeUnmount(() => {
                         <div
                             class="flex min-h-48 flex-col gap-3 rounded-lg border border-default bg-default p-4"
                         >
-                            <div class="flex flex-1 flex-col gap-3">
+                            <div
+                                v-if="chatMessages.length === 0"
+                                class="flex flex-1 items-center justify-center rounded-lg border border-dashed border-default p-4 text-center text-sm text-muted"
+                            >
+                                No messages in the public room.
+                            </div>
+                            <div v-else class="flex flex-1 flex-col gap-3">
                                 <div
                                     v-for="message in chatMessages"
                                     :key="message.id"
@@ -364,15 +383,18 @@ onBeforeUnmount(() => {
                                     v-model="chatForm.name"
                                     aria-label="Name"
                                     autocomplete="off"
+                                    placeholder="Name"
                                 />
                                 <UInput
                                     v-model="chatForm.content"
                                     aria-label="Message"
                                     autocomplete="off"
+                                    placeholder="Message"
                                     @keydown.enter="sendChatMessage"
                                 />
                                 <UButton
                                     :loading="chatSending"
+                                    :disabled="chatForm.content.trim() === ''"
                                     icon="i-lucide-send"
                                     @click="sendChatMessage"
                                 >
@@ -381,6 +403,13 @@ onBeforeUnmount(() => {
                             </div>
                             <p class="text-xs text-muted" aria-live="polite">
                                 {{ chatStatus }}
+                            </p>
+                            <p
+                                v-if="chatError"
+                                class="text-xs text-error"
+                                aria-live="polite"
+                            >
+                                {{ chatError }}
                             </p>
                         </div>
                     </div>
