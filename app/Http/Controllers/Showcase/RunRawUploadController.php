@@ -51,6 +51,12 @@ final class RunRawUploadController extends Controller
         $hash = hash_init('sha256');
         $bytes = 0;
 
+        if ($output === false) {
+            fclose($input);
+
+            return $this->failure('storage_unavailable', 'Upload storage is not writable.', 500);
+        }
+
         try {
             while (! feof($input)) {
                 $chunk = fread($input, 65536);
