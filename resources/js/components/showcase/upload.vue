@@ -65,7 +65,7 @@ const pressureSnapshots = ref<Record<PressureMode, PressureSnapshot | null>>({
 });
 const liveStatus = ref<UploadStatus>(props.uploadStatus);
 
-const csrfHeaders = () => {
+const csrfHeaders = (): Record<string, string> => {
     const xsrfToken = document.cookie
         .split('; ')
         .find((cookie) => cookie.startsWith('XSRF-TOKEN='))

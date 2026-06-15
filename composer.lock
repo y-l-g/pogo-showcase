@@ -1193,16 +1193,16 @@
         },
         {
             "name": "guzzlehttp/uri-template",
-            "version": "v1.0.6",
+            "version": "v1.0.7",
             "source": {
                 "type": "git",
                 "url": "https://github.com/guzzle/uri-template.git",
-                "reference": "eef7f87bab6f204eba3c39224d8075c70c637946"
+                "reference": "7fe811c23a9e3cd712b4389eaeb50b5456d8c529"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/guzzle/uri-template/zipball/eef7f87bab6f204eba3c39224d8075c70c637946",
-                "reference": "eef7f87bab6f204eba3c39224d8075c70c637946",
+                "url": "https://api.github.com/repos/guzzle/uri-template/zipball/7fe811c23a9e3cd712b4389eaeb50b5456d8c529",
+                "reference": "7fe811c23a9e3cd712b4389eaeb50b5456d8c529",
                 "shasum": ""
             },
             "require": {
@@ -1259,7 +1259,7 @@
             ],
             "support": {
                 "issues": "https://github.com/guzzle/uri-template/issues",
-                "source": "https://github.com/guzzle/uri-template/tree/v1.0.6"
+                "source": "https://github.com/guzzle/uri-template/tree/v1.0.7"
             },
             "funding": [
                 {
@@ -1275,7 +1275,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-23T22:00:21+00:00"
+            "time": "2026-06-12T21:33:43+00:00"
         },
         {
             "name": "inertiajs/inertia-laravel",
@@ -2991,16 +2991,16 @@
         },
         {
             "name": "nesbot/carbon",
-            "version": "3.11.4",
+            "version": "3.12.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/CarbonPHP/carbon.git",
-                "reference": "e890471a3494740f7d9326d72ce6a8c559ffee60"
+                "reference": "6e7853a668c3107294aff38d42bf760ec02126b6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/CarbonPHP/carbon/zipball/e890471a3494740f7d9326d72ce6a8c559ffee60",
-                "reference": "e890471a3494740f7d9326d72ce6a8c559ffee60",
+                "url": "https://api.github.com/repos/CarbonPHP/carbon/zipball/6e7853a668c3107294aff38d42bf760ec02126b6",
+                "reference": "6e7853a668c3107294aff38d42bf760ec02126b6",
                 "shasum": ""
             },
             "require": {
@@ -3092,7 +3092,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-04-07T09:57:54+00:00"
+            "time": "2026-06-14T20:41:42+00:00"
         },
         {
             "name": "nette/schema",
@@ -3769,16 +3769,16 @@
         },
         {
             "name": "phpseclib/phpseclib",
-            "version": "3.0.53",
+            "version": "3.0.55",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpseclib/phpseclib.git",
-                "reference": "511ddc8e352d5d1f1e33bea468b6f4ef48438cf9"
+                "reference": "db9744e6d47e742b1f974e965ad49bdd041105af"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/511ddc8e352d5d1f1e33bea468b6f4ef48438cf9",
-                "reference": "511ddc8e352d5d1f1e33bea468b6f4ef48438cf9",
+                "url": "https://api.github.com/repos/phpseclib/phpseclib/zipball/db9744e6d47e742b1f974e965ad49bdd041105af",
+                "reference": "db9744e6d47e742b1f974e965ad49bdd041105af",
                 "shasum": ""
             },
             "require": {
@@ -3859,7 +3859,7 @@
             ],
             "support": {
                 "issues": "https://github.com/phpseclib/phpseclib/issues",
-                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.53"
+                "source": "https://github.com/phpseclib/phpseclib/tree/3.0.55"
             },
             "funding": [
                 {
@@ -3875,7 +3875,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-06-09T18:08:26+00:00"
+            "time": "2026-06-14T23:24:10+00:00"
         },
         {
             "name": "phpstan/phpdoc-parser",
@@ -3974,12 +3974,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/y-l-g/websocket.git",
-                "reference": "41f3370274209701e8852ad8a2a0c35b434a977b"
+                "reference": "7cf8da7b3d56702befbcf2bda8fb737f822805a8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/y-l-g/websocket/zipball/41f3370274209701e8852ad8a2a0c35b434a977b",
-                "reference": "41f3370274209701e8852ad8a2a0c35b434a977b",
+                "url": "https://api.github.com/repos/y-l-g/websocket/zipball/7cf8da7b3d56702befbcf2bda8fb737f822805a8",
+                "reference": "7cf8da7b3d56702befbcf2bda8fb737f822805a8",
                 "shasum": ""
             },
             "require": {
@@ -4015,7 +4015,7 @@
                 "issues": "https://github.com/y-l-g/websocket/issues",
                 "source": "https://github.com/y-l-g/websocket/tree/main"
             },
-            "time": "2026-06-12T16:32:07+00:00"
+            "time": "2026-06-13T19:22:08+00:00"
         },
         {
             "name": "pragmarx/google2fa",
@@ -5380,16 +5380,16 @@
         },
         {
             "name": "spatie/php-structure-discoverer",
-            "version": "2.4.2",
+            "version": "2.4.4",
             "source": {
                 "type": "git",
                 "url": "https://github.com/spatie/php-structure-discoverer.git",
-                "reference": "10cd4e0018450d23e2bd8f8472569ad0c445c0fc"
+                "reference": "fa2b7dae8e8a22c0306154c4b052420e054f7e2b"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/spatie/php-structure-discoverer/zipball/10cd4e0018450d23e2bd8f8472569ad0c445c0fc",
-                "reference": "10cd4e0018450d23e2bd8f8472569ad0c445c0fc",
+                "url": "https://api.github.com/repos/spatie/php-structure-discoverer/zipball/fa2b7dae8e8a22c0306154c4b052420e054f7e2b",
+                "reference": "fa2b7dae8e8a22c0306154c4b052420e054f7e2b",
                 "shasum": ""
             },
             "require": {
@@ -5447,7 +5447,7 @@
             ],
             "support": {
                 "issues": "https://github.com/spatie/php-structure-discoverer/issues",
-                "source": "https://github.com/spatie/php-structure-discoverer/tree/2.4.2"
+                "source": "https://github.com/spatie/php-structure-discoverer/tree/2.4.4"
             },
             "funding": [
                 {
@@ -5455,7 +5455,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-04-28T06:26:02+00:00"
+            "time": "2026-06-15T07:14:32+00:00"
         },
         {
             "name": "spatie/shiki-php",
@@ -9057,16 +9057,16 @@
         },
         {
             "name": "webmozart/assert",
-            "version": "2.4.0",
+            "version": "2.4.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/webmozarts/assert.git",
-                "reference": "9007ea6f45ecf352a9422b36644e4bfc039b9155"
+                "reference": "2ccb7c2e821038c03a3e6e1700c570c158c55f70"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozarts/assert/zipball/9007ea6f45ecf352a9422b36644e4bfc039b9155",
-                "reference": "9007ea6f45ecf352a9422b36644e4bfc039b9155",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/2ccb7c2e821038c03a3e6e1700c570c158c55f70",
+                "reference": "2ccb7c2e821038c03a3e6e1700c570c158c55f70",
                 "shasum": ""
             },
             "require": {
@@ -9117,9 +9117,9 @@
             ],
             "support": {
                 "issues": "https://github.com/webmozarts/assert/issues",
-                "source": "https://github.com/webmozarts/assert/tree/2.4.0"
+                "source": "https://github.com/webmozarts/assert/tree/2.4.1"
             },
-            "time": "2026-05-20T13:07:01+00:00"
+            "time": "2026-06-15T15:31:57+00:00"
         }
     ],
     "packages-dev": [
